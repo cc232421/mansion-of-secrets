@@ -210,6 +210,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     let newStoryProgress = state.storyProgress;
     let message = `Order complete! +${order.rewardCoins} coins`;
 
+    // Advance story for ALL order completions (scaled by level)
+    const progressByLevel: Record<number, number> = { 1: 1, 2: 2, 3: 5, 4: 10 };
+    const maxReqLevel = Math.max(...order.requirements.map(r => r.level));
+    newStoryProgress = Math.min(100, state.storyProgress + (progressByLevel[maxReqLevel] ?? 1));
+
     const hasL4 = order.requirements.some(r => r.level === 4);
     if (hasL4 && Math.random() < 0.4) {
       const types: ('key' | 'photo' | 'crystal')[] = ['key', 'photo', 'crystal'];

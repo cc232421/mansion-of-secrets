@@ -36,7 +36,7 @@
     "startButton": "🧩 立即开始游戏"
   },
   "menu": {
-    "mergeBoard": "合成棋盘",
+    "mergeBoard": "合并面板",
     "rooms": "房间",
     "continueStory": "继续剧情",
     "outOfEnergy": "能量耗尽！",
@@ -45,7 +45,7 @@
   "orders": {
     "title": "订单",
     "complete": "完成订单",
-    "locked": "未解锁",
+    "locked": "已锁定",
     "completed": "已完成",
     "notEnoughItems": "物品不足",
     "notEnoughEnergy": "能量不足",
@@ -53,24 +53,27 @@
     "evidenceDrop": "✨ 获得证据！",
     "buyEnergy": "购买能量",
     "buyEnergyCost": "100 🪙 → +30 ⚡",
-    "refreshOrders": "刷新订单",
-    "energyCost": "⚡ 消耗"
+    "refreshOrders": "刷新",
+    "energyCost": "⚡ 消耗",
+    "noOrders": "暂无订单，继续游戏解锁！",
+    "notEnoughCoins": "金币不足"
   },
   "story": {
     "title": "家族秘密",
     "progress": "剧情进度",
     "chapterLabel": "第 {{n}} 章",
-    "locked": "未解锁",
+    "locked": "已锁定",
     "unlocked": "已解锁",
-    "evidenceCollected": "证据: {{current}}/{{total}}",
-    "teaserUnlock": "预告解锁！",
-    "roomUnlocked": "房间解锁！",
+    "evidenceCollected": "证据：{{current}}/{{total}}",
+    "teaserUnlock": "线索已解锁！",
+    "roomUnlocked": "房间已解锁！",
     "chapterComplete": "章节完成！"
   },
   "rooms": {
-    "title": "豪宅",
+    "title": "神秘豪宅",
+    "subtitle": "完成订单以解锁房间",
     "locked": "🔒 探索以解锁",
-    "renovated": "✨ 已装修",
+    "renovated": "✨ 已翻新",
     "evidenceNeeded": "还需 {{count}} 个证据"
   },
   "gameover": {

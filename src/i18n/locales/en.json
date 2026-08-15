@@ -54,7 +54,9 @@
     "buyEnergy": "Buy Energy",
     "buyEnergyCost": "100 🪙 → +30 ⚡",
     "refreshOrders": "Refresh",
-    "energyCost": "⚡ cost"
+    "energyCost": "⚡ cost",
+    "noOrders": "No active orders yet. Keep playing to unlock!",
+    "notEnoughCoins": "Not enough coins"
   },
   "story": {
     "title": "Family Secrets",

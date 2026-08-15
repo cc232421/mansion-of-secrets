@@ -16,6 +16,7 @@ function App() {
   const [showCutscene, setShowCutscene] = useState(false);
   const [activeView, setActiveView] = useState<'merge' | 'rooms'>('merge');
   const [gameStarted, setGameStarted] = useState(false);
+  const { t } = useTranslation();
   const { storyProgress, currentChapter } = useGameStore();
 
   // Start energy auto-regen timer
@@ -69,9 +70,9 @@ function App() {
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <p className="text-4xl mb-4">🏚️</p>
-                <p className="font-display text-2xl text-[#C9A84C]">Renovate Your Mansion</p>
+                <p className="font-display text-2xl text-[#C9A84C]">{t('rooms.title')}</p>
                 <p className="mt-2 text-[#FFF8F0]/60">
-                  Complete orders to unlock rooms
+                  {t('rooms.subtitle')}
                 </p>
                 <div className="mt-6 space-y-3">
                   {currentChapterData?.rooms?.map((room: string) => (
@@ -94,13 +95,13 @@ function App() {
               className={`btn-primary ${activeView === 'merge' ? '' : 'opacity-60'}`}
               onClick={() => { setActiveView('merge'); Sound.click(); }}
             >
-              🧩 Merge Board
+              🧩 {t('menu.mergeBoard')}
             </button>
             <button
               className={`btn-primary ${activeView === 'rooms' ? '' : 'opacity-60'}`}
               onClick={() => { setActiveView('rooms'); Sound.click(); }}
             >
-              🏠 Rooms
+              🏠 {t('menu.rooms')}
             </button>
           </div>
         </div>
@@ -130,7 +131,7 @@ function App() {
             className="btn-gold"
             onClick={() => { setShowCutscene(true); Sound.click(); }}
           >
-            Continue Story
+            {t('menu.continueStory')}
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 export interface Requirement {
   level: 1 | 2 | 3 | 4;
-  type: string;
+  type: 'key' | 'photo' | 'crystal';
   count: number;
 }
 
@@ -27,8 +27,10 @@ export interface OrderTemplate {
   energyCost: number;
 }
 
-// Pre-defined order templates
+// NOTE: All item types (key/photo/crystal) must exist in MERGE_ITEMS
+// badge/box/document were removed — they don't exist in the game
 export const ORDER_TEMPLATES: OrderTemplate[] = [
+  // ── L1 Orders (easy) ───────────────────────────────────────────
   {
     description: 'Restore the family portrait',
     requirements: [{ level: 1, type: 'photo', count: 3 }],
@@ -48,42 +50,53 @@ export const ORDER_TEMPLATES: OrderTemplate[] = [
     energyCost: 5,
   },
   {
-    description: 'Assemble the heirloom box',
+    description: 'Assemble the family album',
     requirements: [
-      { level: 2, type: 'key', count: 2 },
-      { level: 1, type: 'photo', count: 1 },
+      { level: 1, type: 'photo', count: 2 },
+      { level: 1, type: 'key', count: 2 },
     ],
+    rewardCoins: 150,
+    energyCost: 10,
+  },
+  // ── L2 Orders (medium) ─────────────────────────────────────────
+  {
+    description: 'Craft the master key',
+    requirements: [{ level: 2, type: 'key', count: 2 }],
     rewardCoins: 200,
     energyCost: 15,
   },
   {
-    description: 'Complete the family crest',
-    requirements: [{ level: 2, type: 'badge', count: 2 }],
-    rewardCoins: 250,
-    energyCost: 20,
+    description: 'Restore the heirloom photo',
+    requirements: [{ level: 2, type: 'photo', count: 2 }],
+    rewardCoins: 200,
+    energyCost: 15,
   },
   {
-    description: 'Decode the secret document',
-    requirements: [
-      { level: 2, type: 'document', count: 1 },
-      { level: 1, type: 'crystal', count: 2 },
-    ],
-    rewardCoins: 300,
-    energyCost: 25,
+    description: 'Charge the crystal orb',
+    requirements: [{ level: 2, type: 'crystal', count: 2 }],
+    rewardCoins: 200,
+    energyCost: 15,
   },
+  // ── L3 Orders (hard) ───────────────────────────────────────────
   {
     description: 'Unlock the mystery',
-    requirements: [{ level: 3, type: 'box', count: 1 }],
+    requirements: [{ level: 3, type: 'key', count: 1 }],
     rewardCoins: 500,
     energyCost: 30,
   },
   {
     description: 'Reveal the truth',
-    requirements: [{ level: 3, type: 'document', count: 1 }],
+    requirements: [{ level: 3, type: 'photo', count: 1 }],
     rewardCoins: 500,
     energyCost: 30,
   },
-  // ── L4 Special Orders ────────────────────────────────────────
+  {
+    description: 'Discover the crystal crown',
+    requirements: [{ level: 3, type: 'crystal', count: 1 }],
+    rewardCoins: 500,
+    energyCost: 30,
+  },
+  // ── L4 Orders (legendary) ─────────────────────────────────────
   {
     description: 'The Royal Crown Collection',
     requirements: [{ level: 4, type: 'key', count: 1 }],
