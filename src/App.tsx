@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from './stores/gameStore';
 import { saveGame } from './services/saveService';
@@ -9,15 +9,38 @@ import { MergeBoard } from './ui/components/MergeBoard';
 import { OrdersPanel } from './ui/components/OrdersPanel';
 import { StoryPanel } from './ui/components/StoryPanel';
 import { CutsceneModal } from './ui/components/CutsceneModal';
+import { TabBar, Tab } from './ui/components/TabBar';
 import { CHAPTERS } from './data/chapters';
 import { startEnergyTimer } from './stores/gameStore';
 
+type Layout = 'mobile' | 'tablet' | 'desktop';
+
+function getLayout(): Layout {
+  const w = window.innerWidth;
+  if (w < 768) return 'mobile';
+  if (w < 1024) return 'tablet';
+  return 'desktop';
+}
+
 function App() {
   const [showCutscene, setShowCutscene] = useState(false);
-  const [activeView, setActiveView] = useState<'merge' | 'rooms'>('merge');
   const [gameStarted, setGameStarted] = useState(false);
   const { t } = useTranslation();
   const { storyProgress, currentChapter } = useGameStore();
+
+  // Track screen size for responsive layout
+  const [layout, setLayout] = useState<Layout>('desktop');
+
+  // Mobile: which tab is active
+  const [mobileTab, setMobileTab] = useState<Tab>('merge');
+
+  // Listen for resize
+  useEffect(() => {
+    const update = () => setLayout(getLayout());
+    update(); // initial
+    window.addEventListener('resize', update, { passive: true });
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Start energy auto-regen timer
   useEffect(() => {
@@ -30,7 +53,6 @@ function App() {
       const state = useGameStore.getState();
       await saveGame(state);
     }, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -39,7 +61,6 @@ function App() {
     const lastCutscene = localStorage.getItem('lastCutscene');
     const shouldTrigger =
       storyProgress >= 5 && storyProgress < 10 && !lastCutscene;
-
     if (shouldTrigger) {
       setShowCutscene(true);
     }
@@ -55,73 +76,131 @@ function App() {
     <div className="w-full h-full relative" style={{ background: '#1a0f0a' }}>
       <TopBar />
 
-      {/* Main content */}
-      <div className="flex h-full pt-[60px]">
-        {/* Left panel - Story / Family Secrets */}
-        <div className="w-64 p-4 shrink-0 hidden md:block">
-          <StoryPanel />
-        </div>
+      {/* ── Mobile layout (≤767px) ───────────────────────────────── */}
+      {layout === 'mobile' && (
+        <MobileLayout
+          mobileTab={mobileTab}
+          onTabChange={setMobileTab}
+        />
+      )}
 
-        {/* Center - Game area */}
-        <div className="flex-1 relative" style={{ minHeight: '520px' }}>
-          {activeView === 'merge' ? (
-            <MergeBoard />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-4xl mb-4">🏚️</p>
-                <p className="font-display text-2xl text-[#C9A84C]">{t('rooms.title')}</p>
-                <p className="mt-2 text-[#FFF8F0]/60">
-                  {t('rooms.subtitle')}
-                </p>
-                <div className="mt-6 space-y-3">
-                  {currentChapterData?.rooms?.map((room: string) => (
-                    <div key={room} className="order-card text-left">
-                      <p className="text-[#FFF8F0] font-semibold">{room}</p>
-                      <p className="text-2xl mt-1">🔒</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+      {/* ── Tablet layout (768px–1023px) ───────────────────────── */}
+      {layout === 'tablet' && (
+        <TabletLayout
+          currentChapterData={currentChapterData}
+          storyProgress={storyProgress}
+          onContinue={() => setShowCutscene(true)}
+        />
+      )}
 
-          {/* View toggle */}
-          <div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3"
-            style={{ zIndex: 50 }}
-          >
-            <button
-              className={`btn-primary ${activeView === 'merge' ? '' : 'opacity-60'}`}
-              onClick={() => { setActiveView('merge'); Sound.click(); }}
-            >
-              🧩 {t('menu.mergeBoard')}
-            </button>
-            <button
-              className={`btn-primary ${activeView === 'rooms' ? '' : 'opacity-60'}`}
-              onClick={() => { setActiveView('rooms'); Sound.click(); }}
-            >
-              🏠 {t('menu.rooms')}
-            </button>
+      {/* ── Desktop layout (≥1024px) ─────────────────────────────── */}
+      {layout === 'desktop' && (
+        <DesktopLayout
+          currentChapterData={currentChapterData}
+          storyProgress={storyProgress}
+          onContinue={() => setShowCutscene(true)}
+        />
+      )}
+
+      {/* Cutscene modal */}
+      {showCutscene && (
+        <CutsceneModal onClose={() => setShowCutscene(false)} />
+      )}
+    </div>
+  );
+}
+
+// ── Mobile Layout ────────────────────────────────────────────────
+function MobileLayout({
+  mobileTab,
+  onTabChange,
+}: {
+  mobileTab: Tab;
+  onTabChange: (t: Tab) => void;
+}) {
+  return (
+    <>
+      <div
+        style={{
+          height: 'calc(100vh - 60px - 60px)',
+          padding: 8,
+        }}
+      >
+        {mobileTab === 'merge' && <MergeBoard />}
+        {mobileTab === 'orders' && (
+          <div style={{ height: '100%', overflow: 'auto' }}>
+            <OrdersPanel />
           </div>
-        </div>
+        )}
+        {mobileTab === 'story' && (
+          <div style={{ height: '100%', overflow: 'auto' }}>
+            <StoryPanel />
+          </div>
+        )}
+      </div>
+      <TabBar activeTab={mobileTab} onTabChange={onTabChange} />
+    </>
+  );
+}
 
-        {/* Right panel - Orders */}
-        <div className="w-72 p-4 shrink-0 hidden lg:block">
+// ── Tablet Layout ─────────────────────────────────────────────────
+function TabletLayout({
+  currentChapterData,
+  storyProgress,
+  onContinue,
+}: {
+  currentChapterData: { title?: string } | undefined;
+  storyProgress: number;
+  onContinue: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div style={{ height: 'calc(100vh - 60px)' }}>
+      <div style={{ display: 'flex', height: 'calc(100% - 60px)' }}>
+        {/* Center: Merge Board */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <MergeBoard />
+        </div>
+        {/* Right: Orders */}
+        <div
+          style={{
+            width: 280,
+            borderLeft: '1px solid rgba(201,168,76,0.15)',
+            padding: 12,
+            overflow: 'auto',
+          }}
+        >
           <OrdersPanel />
         </div>
       </div>
-
-      {/* Story progress bar at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#1a0f0a] to-transparent">
-        <div className="flex items-center gap-4">
-          <span className="text-2xl">📖</span>
-          <div className="flex-1">
-            <div className="flex justify-between mb-1">
-              <span className="text-sm text-[#C9A84C] font-semibold">
+      {/* Story progress bar */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '8px 16px',
+          background: 'linear-gradient(to top, rgba(26,15,10,0.95), transparent)',
+          borderTop: '1px solid rgba(201,168,76,0.1)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 18 }}>📖</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 13, color: '#C9A84C', fontWeight: 600 }}>
                 {currentChapterData?.title || 'Chapter 1'}
               </span>
-              <span className="text-sm text-[#FFF8F0]/60">{storyProgress}%</span>
+              <span style={{ fontSize: 13, color: 'rgba(255,248,240,0.6)' }}>{storyProgress}%</span>
             </div>
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${storyProgress}%` }} />
@@ -129,17 +208,84 @@ function App() {
           </div>
           <button
             className="btn-gold"
-            onClick={() => { setShowCutscene(true); Sound.click(); }}
+            style={{ padding: '6px 14px', fontSize: 13 }}
+            onClick={onContinue}
+          >
+            {t('menu.continueStory')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Desktop Layout ────────────────────────────────────────────────
+function DesktopLayout({
+  currentChapterData,
+  storyProgress,
+  onContinue,
+}: {
+  currentChapterData: { title?: string } | undefined;
+  storyProgress: number;
+  onContinue: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div style={{ display: 'flex', height: 'calc(100vh - 60px)' }}>
+      {/* Left: Story Panel */}
+      <div
+        style={{
+          width: 256,
+          borderRight: '1px solid rgba(201,168,76,0.15)',
+          padding: 16,
+        }}
+      >
+        <StoryPanel />
+      </div>
+
+      {/* Center: Game area */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <MergeBoard />
+        </div>
+        {/* Continue Story */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 50,
+          }}
+        >
+          <button
+            className="btn-gold"
+            onClick={() => { onContinue(); Sound.click(); }}
           >
             {t('menu.continueStory')}
           </button>
         </div>
       </div>
 
-      {/* Cutscene modal */}
-      {showCutscene && (
-        <CutsceneModal onClose={() => setShowCutscene(false)} />
-      )}
+      {/* Right: Orders Panel */}
+      <div
+        style={{
+          width: 288,
+          borderLeft: '1px solid rgba(201,168,76,0.15)',
+          padding: 16,
+        }}
+      >
+        <OrdersPanel />
+      </div>
     </div>
   );
 }

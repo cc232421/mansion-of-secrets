@@ -4,12 +4,11 @@ import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createIte
 import { Sound } from '../../services/soundService';
 import './MergeBoard.css';
 
-// Board constants
-const CELL_SIZE = 72;
-const CELL_GAP = 4;
-const CELL_TOTAL = CELL_SIZE + CELL_GAP; // 76px per cell
+const CELL_GAP = 4; // px gap between cells
 const COLS = 6;
 const ROWS = 6;
+const BOARD_PADDING = 12; // px padding inside board
+const MIN_CELL_SIZE = 44; // minimum cell size on smallest phones
 
 interface DragState {
   item: Item;
@@ -29,6 +28,29 @@ export function MergeBoard() {
   const { board, setBoardItems, addCoins } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
 
+  // Responsive cell size — calculated from container width
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [cellSize, setCellSize] = useState(MIN_CELL_SIZE);
+
+  // Calculate cell size from container width
+  useEffect(() => {
+    const update = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const available = container.clientWidth - BOARD_PADDING * 2;
+      const raw = (available - CELL_GAP * (COLS - 1)) / COLS;
+      setCellSize(Math.max(MIN_CELL_SIZE, Math.floor(raw)));
+    };
+
+    update(); // Initial calculation
+
+    const ro = new ResizeObserver(update);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const cellTotal = cellSize + CELL_GAP;
+
   // Current drag state
   const [drag, setDrag] = useState<DragState | null>(null);
   const [mouseX, setMouseX] = useState(0);
@@ -39,16 +61,14 @@ export function MergeBoard() {
 
   const boardRef = useRef<HTMLDivElement>(null);
 
-  // ─── Energy check ───────────────────────────────────────────────
+  // Energy check
   useEffect(() => {
-    const e = currentEnergy;
-    setNoEnergy(e === 0);
+    setNoEnergy(currentEnergy === 0);
   }, [currentEnergy]);
 
-  // ─── Auto-spawn items ──────────────────────────────────────────
+  // Auto-spawn items every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      // Find empty slot
       const emptyIndices: number[] = [];
       for (let i = 0; i < 36; i++) {
         if (!board[i]) emptyIndices.push(i);
@@ -61,20 +81,22 @@ export function MergeBoard() {
     return () => clearInterval(interval);
   }, [board, setBoardItems]);
 
-  // ─── Client → grid cell ────────────────────────────────────────
+  // Client → grid cell
   const clientToCell = useCallback((clientX: number, clientY: number) => {
-    const board = boardRef.current;
-    if (!board) return null;
-    const rect = board.getBoundingClientRect();
-    const relX = clientX - rect.left;
-    const relY = clientY - rect.top;
-    const col = Math.floor(relX / CELL_TOTAL);
-    const row = Math.floor(relY / CELL_TOTAL);
-    if (col >= 0 && col < COLS && row >= 0 && row < ROWS) return { col, row, index: row * COLS + col };
+    const br = boardRef.current;
+    if (!br) return null;
+    const rect = br.getBoundingClientRect();
+    const relX = clientX - rect.left - BOARD_PADDING;
+    const relY = clientY - rect.top - BOARD_PADDING;
+    const col = Math.floor(relX / cellTotal);
+    const row = Math.floor(relY / cellTotal);
+    if (col >= 0 && col < COLS && row >= 0 && row < ROWS) {
+      return { col, row, index: row * COLS + col };
+    }
     return null;
-  }, []);
+  }, [cellTotal]);
 
-  // ─── Pointer Down ──────────────────────────────────────────────
+  // Pointer Down
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>, index: number) => {
     if (noEnergy) return;
     const item = board[index];
@@ -88,7 +110,7 @@ export function MergeBoard() {
     Sound.pickup();
   };
 
-  // ─── Pointer Move ───────────────────────────────────────────────
+  // Pointer Move
   useEffect(() => {
     if (!drag) return;
     const handleMove = (e: PointerEvent) => {
@@ -106,7 +128,7 @@ export function MergeBoard() {
     return () => window.removeEventListener('pointermove', handleMove);
   }, [drag, clientToCell]);
 
-  // ─── Pointer Up ─────────────────────────────────────────────────
+  // Pointer Up
   useEffect(() => {
     if (!drag) return;
     const handleUp = (e: PointerEvent) => {
@@ -117,7 +139,7 @@ export function MergeBoard() {
         const targetItem = board[targetIndex];
 
         if (targetItem && canMerge(drag.item, targetItem) && targetIndex !== drag.sourceIndex) {
-          // ✅ MERGE — use mergeReward from items config (NOT hardcoded)
+          // ✅ MERGE
           const newLevel = (drag.item.level + 1) as ItemLevel;
           const configs = MERGE_ITEMS[newLevel];
           const cfg = configs?.find(c => c.type === drag.item.type);
@@ -132,14 +154,13 @@ export function MergeBoard() {
           setTimeout(() => setMergeEffects(prev => prev.slice(1)), 1000);
           addCoins(reward);
 
-          // Play merge sound — L4 gets legendary treatment
           if (newLevel === 4) {
             Sound.legendaryMerge();
           } else {
             Sound.merge(newLevel);
           }
         } else if (!targetItem && targetIndex !== drag.sourceIndex) {
-          // ✅ MOVE — soft drop sound
+          // ✅ MOVE
           const updates: { index: number; item: Item | null }[] = [
             { index: drag.sourceIndex, item: null },
             { index: targetIndex, item: drag.item },
@@ -158,9 +179,11 @@ export function MergeBoard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drag, board, clientToCell, setBoardItems, addCoins]);
 
-  // ─── Render ───────────────────────────────────────────────────
+  const totalBoardW = BOARD_PADDING * 2 + cellSize * COLS + CELL_GAP * (COLS - 1);
+  const totalBoardH = BOARD_PADDING * 2 + cellSize * ROWS + CELL_GAP * (ROWS - 1);
+
   return (
-    <div className={`merge-board-wrapper ${noEnergy ? 'no-energy' : ''}`}>
+    <div className="merge-board-wrapper" ref={containerRef}>
       {/* No energy overlay */}
       {noEnergy && (
         <div className="energy-overlay">
@@ -175,13 +198,15 @@ export function MergeBoard() {
           className="merge-item floating"
           style={{
             position: 'fixed',
-            left: mouseX - CELL_SIZE / 2,
-            top: mouseY - CELL_SIZE / 2,
+            left: mouseX - cellSize / 2,
+            top: mouseY - cellSize / 2,
             zIndex: 9999,
             pointerEvents: 'none',
+            width: cellSize,
+            height: cellSize,
           }}
         >
-          <span className="item-emoji">{getItemConfig(drag.item).emoji}</span>
+          <span className="item-emoji" style={{ fontSize: cellSize * 0.55 }}>{getItemConfig(drag.item).emoji}</span>
         </div>
       )}
 
@@ -190,8 +215,9 @@ export function MergeBoard() {
         ref={boardRef}
         className="merge-board"
         style={{
-          gridTemplateColumns: `repeat(${COLS}, ${CELL_SIZE}px)`,
-          gridTemplateRows: `repeat(${ROWS}, ${CELL_SIZE}px)`,
+          width: totalBoardW,
+          height: totalBoardH,
+          padding: BOARD_PADDING,
           gap: `${CELL_GAP}px`,
         }}
       >
@@ -206,14 +232,15 @@ export function MergeBoard() {
             <div
               key={index}
               className={`merge-cell ${isHighlight ? 'merge-cell-highlight' : ''}`}
-              style={{ width: CELL_SIZE, height: CELL_SIZE }}
+              style={{ width: cellSize, height: cellSize }}
             >
               {item && !isDragSource && (
                 <div
                   className={`merge-item level-${item.level}`}
                   onPointerDown={(e) => handlePointerDown(e, index)}
+                  style={{ width: cellSize, height: cellSize }}
                 >
-                  <span className="item-emoji">{getItemConfig(item).emoji}</span>
+                  <span className="item-emoji" style={{ fontSize: cellSize * 0.55 }}>{getItemConfig(item).emoji}</span>
                   {item.level >= 3 && <span className="item-star">★</span>}
                 </div>
               )}
