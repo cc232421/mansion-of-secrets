@@ -1,536 +1,337 @@
-# Mansion of Secrets — 重构方案 v2.0
+# Mansion of Secrets — 玩法整合方案 v2.0
 
 > **版本：** v2.0  
-**日期：** 2026-08-15  
-**作者：** 网页游戏专家审计  
-**状态：** 待实施
+> **审计：** 网页游戏专家视角  
+> **状态：** 待实施
 
 ---
 
-## 一、当前代码问题诊断（严苛审计）
+## 一、原方案严苛审计
 
-### 🔴 P0 — 游戏无法运行（致命问题）
+### 🔴 P0 — 核心问题（致命）
 
-#### 问题 1：Canvas 坐标系统完全错位
+#### 问题 1：玩家合到 L4 后没有「哇」时刻
 
-**文件：** `src/ui/components/MergeBoard.tsx`
+**原方案：** 合到 L4 → 交付 L4 订单 → 获得证据。L4 合成本身是平的，没有仪式感。
 
-**根因：** `getCellFromPos` 和 `getCellCenter` 使用 `window.innerWidth` / `window.innerHeight` 计算棋盘偏移，但 canvas 有自己的 `getBoundingClientRect()` 坐标系，两者不匹配。
+**审计意见：** 玩家花了 8 次合成才到 L4，结果看到的只是「+500 金币」。顶级物品合成应该是一个 **MEMORABLE MOMENT**（值得纪念的时刻），要有光效、音效、播片、三星展示。参考 Candy Crush 的「Sugar Bomb」爆炸效果。
+
+**修复：** L4 合成触发「传说时刻」：屏幕金光 + 物品飞升动画 + 短暂黑屏 + 证据爆出特效。
+
+#### 问题 2：证据系统太线性，缺乏悬念
+
+**原方案：** 收集 3 个证据 → 解锁房间 → 播放过场。玩家一眼看到进度条，没有期待感。
+
+**审计意见：** 好的悬念设计是 **Teaser + Payoff**。部分证据应该触发「预览片段」——比如拿到 1/3 的书房证据，播放 3 秒的「父亲的笔迹在颤抖」，然后戛然而止。玩家会为了「然后呢？」继续玩。
+
+**修复：** 每个房间设置 **3 个证据碎片**，拿到第 1 个触发 Teaser，拿到第 2 个触发「关键线索」，拿到第 3 个解锁完整过场。
+
+#### 问题 3：能量系统是假的
+
+**原方案：** 订单消耗能量，但没有能量也能继续合成。能量只影响订单完成。
+
+**审计意见：** 能量必须成为 **FOMO 机制**。当能量满时，玩家有「不用就浪费」的压力；当能量低时，有「花钱补满」的冲动。目前能量只有合成系统的附庸，没有独立经济价值。
+
+**修复：** 能量耗尽时棋盘变灰（合成变慢），视觉压迫感强烈。同时增加「能量购买」按钮（金币购买，100金币=满能量）。
+
+#### 问题 4：L4 合成太慢，挫败感高
+
+**原方案：** L1+L1=L2，需要 7 次合成才能到 L4。
+
+**审计意见：** 7 次重复合并是 ** Grind**，不是挑战。玩家到 L3 的路上就失去耐心了。要增加「快速通道」。
+
+**修复：** 引入「融合」机制——**任意两个 L3 物品可以融合成 L4**（不需要同类型）。这样玩家可以选择：慢慢同类型合并，或快速融合不同类型。策略选择增加深度。
+
+---
+
+### 🟡 P1 — 商业化问题（重要）
+
+#### 问题 5：完全没有变现设计
+
+**原方案：** 做出来再想变现。
+
+**审计意见：** 免费游戏不在早期设计变现，到后期要推翻重做。变现必须内嵌在核心循环里。
+
+**建议植入的变现点：**
+
+| 位置 | 机制 | 目标用户 |
+|------|------|---------|
+| 能量耗尽 | 「看广告恢复满能量」 | 所有用户 |
+| 订单失败 | 「花100金币跳过惩罚」 | 中等付费 |
+| 稀有订单刷新 | 「花金币刷新传说订单」 | 重度付费 |
+| 扭蛋抽物品 | 「10连抽随机L1-L3物品」 | 鲸鱼 |
+| 外观购买 | 「棋盘皮肤、物品特效」 | 外观党 |
+
+#### 问题 6：没有留存机制
+
+**原方案：** 做完今天的订单就结束了。
+
+**审计意见：** 免费游戏靠 **Daily Engagement** 生存。需要明确的「明天回来」的理由。
+
+**修复：**
+- 每日登录奖励（第 1 天 50 金币，第 7 天 500 金币）
+- 每日首次完成 L4 订单：双倍证据掉落
+- 订单 24 小时过期，制造刷新焦虑
+- 连续登录 7 天：赠送「传说订单刷新券」
+
+---
+
+### 🟢 P2 — 体验细节（优化）
+
+#### 问题 7：订单描述不吸引人
+
+**原方案：** "Restore the family portrait" / "Find the golden key"
+
+**审计意见：** 订单文本应该 **有悬念感**，不是任务清单，是谜题碎片。
+
+**修复：**
+```
+❌ "Restore the family portrait"
+✅ "The portrait's eyes... they're following me"
+❌ "Find the golden key"
+✅ "What does the basement key unlock?"
+```
+
+#### 问题 8：房间解锁没有预览
+
+**原方案：** 直接解锁房间 → 播放过场。
+
+**审计意见：** 好的游戏在解锁新区域前，会给出 **「预告」**——一个模糊的剪影、一段低沉的背景音。好奇感是比奖励更强的驱动力。
+
+**修复：** 房间进度达到 100% 后，显示「书房黑影晃动」动画，3 秒后自动播放过场。
+
+---
+
+## 二、更新后的完整方案
+
+### 核心循环 v2.0
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│   合成物品          完成订单           获得奖励           │
+│      ↑                ↑                ↑                │
+│      └──── 能量消耗 ←┘    金币奖励 ←┘                  │
+│                                                         │
+│   完成 L4 订单                                           │
+│      ↓                                                  │
+│   证据碎片（随机掉落，不是100%！）                        │
+│      ↓                                                  │
+│   部分证据 → 触发「悬念 Teaser」片段                     │
+│      ↓                                                  │
+│   收集齐全部证据 → 解锁房间                              │
+│      ↓                                                  │
+│   播放主线过场 → 揭示家族秘密                            │
+│      ↓                                                  │
+│   下一章节（重复循环，难度递增）                         │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 证据系统 v2.0（带悬念）
+
+```
+每个房间 = 3 个证据碎片
+
+收集第 1 个碎片：
+  → 屏幕闪白
+  → 显示 3 秒「Teaser」片段（例如：一封未署名的信）
+  → 订单 UI 显示「线索：1/3」
+
+收集第 2 个碎片：
+  → 显示「关键线索」片段（例如：信的落款日期）
+  → 订单 UI 显示「线索：2/3」
+
+收集第 3 个碎片：
+  → 触发「解锁动画」：房间门缓缓打开
+  → 播放完整过场
+  → 房间解锁，可探索
+```
+
+### 融合系统（新增快速升级路径）
+
+| 合成方式 | 结果 | 适用场景 |
+|---------|------|---------|
+| 同类型 L3 + 同类型 L3 | L4（同类型） | 定向培养 |
+| 任意 L3 + 任意 L3 | 随机 L4 | 快速升级 |
+| 同类型 L2 + 同类型 L2 | L3 | 标准路径 |
+
+### 能量系统 v2.0（真正生效）
+
+| 能量状态 | 视觉 | 行为 |
+|---------|------|------|
+| 100% | 能量条金色发光 | 正常游戏 |
+| 20-99% | 能量条正常 | 正常游戏，UI 提示「快满了」 |
+| 1-19% | 能量条红色闪烁 | 棋盘轻微变暗，合成速度-30% |
+| 0% | 全屏变灰 + 震动 | 禁止合成，弹出「购买能量」按钮 |
+| 恢复满 | 弹出金光特效 | 正常游戏 |
+
+### 房间解锁进度（8 房间 × 3 章节）
+
+```
+Chapter 1「归来」:
+  📚 书房    — 3个证据碎皮 → Teaser: 颤抖的笔迹
+  🖼️ 画廊    — 3个证据碎皮 → Teaser: 画中人的眼睛
+
+Chapter 2「阴谋」:
+  🍷 酒窖    — 3个证据碎皮 → Teaser: 地下室的脚步声
+  💰 账本室  — 3个证据碎皮 → Teaser: 伪造的签名
+
+Chapter 3「真相」:
+  👵 祖母房  — 3个证据碎皮 → Teaser: 一张旧照片
+  🔥 密室    — 3个证据碎皮 → Teaser: 燃烧的遗嘱
+  🏛️ 阁楼    — 全部房间解锁后 → 最终章过场
+  🚪 出口    — 完成全部 → 大结局
+```
+
+---
+
+## 三、数据结构改动
+
+### 新增类型
 
 ```typescript
-// ❌ 错误代码
-const getCellCenter = useCallback((col: number, row: number) => {
-  const boardWidth = COLS * (CELL_SIZE + CELL_GAP);
-  const boardHeight = ROWS * (CELL_SIZE + CELL_GAP);
-  const offsetX = (window.innerWidth - boardWidth) / 2;   // ← 致命错误
-  const offsetY = (window.innerHeight - boardHeight) / 2 + 60;
-  return { x: offsetX + ..., y: offsetY + ... };
-}, []);
+// 证据碎片
+interface Evidence {
+  id: string;
+  type: 'key' | 'photo' | 'crystal';
+  roomId: string;          // 归属房间
+  teaserShown: boolean;    // Teaser 是否已播放
+  obtained: boolean;
+}
+
+// 房间
+interface Room {
+  id: string;
+  name: string;
+  description: string;    // Teaser 文本
+  requiredEvidence: string[]; // 需要的证据 ID 列表
+  unlocked: boolean;
+  teaserCutsceneId: string;   // 部分证据时播放
+  fullCutsceneId: string;    // 全部收集后播放
+  chapter: number;
+  icon: string;
+}
+
+// 传说订单（高价值）
+interface LegendaryOrder {
+  id: string;
+  description: string;      // 悬念风格描述
+  requirements: Requirement[];
+  rewardCoins: number;
+  rewardEvidence: { type: ItemType }[]; // 完成后掉落的证据类型
+  energyCost: number;
+  available: boolean;
+  expiresAt: string;      // 24小时过期
+}
 ```
 
-当浏览器窗口 ≠ 视口（浏览器有工具栏、地址栏），`window.innerWidth` 小于视觉宽度，导致：
-- 物品点击时找错格子
-- 拖拽释放后物品跳到错误位置
-- 物品根本拖不动
-
-**修复方案：** 统一使用 `canvas.getBoundingClientRect()` 计算所有坐标。
-
----
-
-#### 问题 2：Drag 坐标叠加错误
-
-**根因：** `handleMouseMove` 中已经用 `getCellFromPos` 计算了目标格，但在 drag 时物品位置是用鼠标 raw 坐标更新的，不是网格对齐的。
+### 修改 Requirement 类型
 
 ```typescript
-// ❌ 错误代码
-dragRef.current.item.col = col;   // ← 拖拽中直接赋值，鼠标漂移就乱跳
-dragRef.current.item.row = row;
-```
-
-拖拽中修改 `col/row` 导致物品在网格间跳跃，而不是平滑跟随鼠标。
-
-**修复方案：** 拖拽中只记录鼠标偏移量，释放时才做网格对齐。
-
----
-
-#### 问题 3：Canvas Resize 问题
-
-**根因：** `canvas.width = window.innerWidth` 只在初始化时设置一次，窗口 resize 后 canvas 尺寸不变，但 `getCellCenter` 仍然用新的 `window.innerWidth` 计算，导致棋盘错位。
-
-**修复方案：** 使用 `ResizeObserver` 监听 canvas 容器尺寸变化，重新计算棋盘位置。
-
----
-
-### 🟡 P1 — 游戏能跑但体验差（严重问题）
-
-#### 问题 4：useEffect 无限循环重绘
-
-```typescript
-useEffect(() => {
-  draw();   // ← 每次 state 变化都触发，效率极低
-});
-```
-
-应该只在物品数据变化时重绘，而不是每次渲染都重绘。
-
----
-
-#### 问题 5：Canvas 不响应式
-
-Canvas 没有设置 `position: absolute; top: 0; left: 0`，可能被其他 DOM 元素遮挡或覆盖。
-
----
-
-#### 问题 6：缺少触摸支持
-
-只有 `mousedown/mousemove/mouseup`，没有 `touchstart/touchmove/touchend`，手机无法玩。
-
----
-
-#### 问题 7：物品重叠处理缺失
-
-当两个物品拖到一起时，没有视觉反馈（高亮、缩放等）提示玩家可以合并。
-
----
-
-## 二、重构方案（网页游戏专家推荐）
-
-### 方案选择：渐进式重构（推荐）
-
-**不推荐纯 Vanilla JS 方案：** 纯 HTML+JS 虽然零依赖，但丢失了 React 的组件化和状态管理优势，项目复杂度上去后难以维护。
-
-**推荐方案：React + DOM Grid + 修复拖拽**
-
-保留 React 架构，用 DOM Grid 替代 Canvas 渲染，修复拖拽逻辑。
-
-| 指标 | 原方案 (Canvas) | 新方案 (DOM Grid) |
-|------|----------------|------------------|
-| 渲染性能 | ⚠️ 需手动优化 | ✅ CSS 合成 |
-| 拖拽实现 | ⚠️ 坐标计算复杂 | ✅ Pointer Events API |
-| 触摸支持 | ⚠️ 需额外处理 | ✅ Pointer Events 原生支持 |
-| 代码量 | ~400行 | ~250行 |
-| 调试难度 | 高（Canvas黑盒） | 低（DOM可inspect） |
-| 首屏体积 | 165KB | ~120KB |
-
----
-
-## 三、详细重构步骤
-
-### 步骤 1：重写 MergeBoard — 使用 DOM Grid + Pointer Events
-
-```
-核心改动：
-- <canvas> → <div class="board">
-- 每格 = <div class="cell" data-col="x" data-row="y">
-- 物品 = <div class="item item-level-X item-type-Y">
-- 拖拽 = Pointer Events API (PointerCapture)
-```
-
-**新建文件：** `src/ui/components/MergeBoardDOM.tsx`
-
-#### 核心代码架构
-
-```tsx
-// ==========================================
-// 合并格子系统 — 真正的网格对齐
-// ==========================================
-
-interface BoardState {
-  grid: (Item | null)[][];  // 6x6 二维数组
-  selected: { col: number; row: number } | null;
-  dragged: { col: number; row: number } | null;
-}
-
-// ==========================================
-// Pointer Events 拖拽 — 解决坐标错位
-// ==========================================
-
-function MergeBoardDOM() {
-  const [grid, setGrid] = useState<(Item | null)[][]>(createEmptyGrid());
-  const [dragState, setDragState] = useState<DragState>(null);
-  const boardRef = useRef<HTMLDivElement>(null);
-
-  // ✅ 修复1：用 getBoundingClientRect 计算棋盘位置
-  const getBoardRect = () => boardRef.current!.getBoundingClientRect();
-
-  // ✅ 修复2：鼠标位置 → 格子坐标（精确计算）
-  const clientToGrid = (clientX: number, clientY: number) => {
-    const rect = getBoardRect();
-    const relX = clientX - rect.left;
-    const relY = clientY - rect.top;
-    const col = Math.floor(relX / CELL_TOTAL);
-    const row = Math.floor(relY / CELL_TOTAL);
-    if (col >= 0 && col < COLS && row >= 0 && row < ROWS) return { col, row };
-    return null;
-  };
-
-  // ✅ 修复3：Pointer Events 同时支持鼠标+触摸
-  const handlePointerDown = (e: React.PointerEvent) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    const pos = clientToGrid(e.clientX, e.clientY);
-    if (pos && grid[pos.row][pos.col]) {
-      setDragState({ startPos: pos, currentPos: pos });
-    }
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragState) return;
-    const pos = clientToGrid(e.clientX, e.clientY);
-    if (pos) setDragState(prev => ({ ...prev!, currentPos: pos }));
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!dragState) return;
-    const target = dragState.currentPos;
-    const source = dragState.startPos;
-    if (target && canMerge(grid[source.row][source.col], grid[target.row][target.col])) {
-      // 执行合并
-      performMerge(source, target);
-    } else if (target && !grid[target.row][target.col]) {
-      // 移动到空格
-      moveItem(source, target);
-    }
-    setDragState(null);
-  };
-
-  return (
-    <div ref={boardRef} className="board">
-      {grid.map((row, rowIdx) =>
-        row.map((item, colIdx) => (
-          <div
-            key={`${colIdx}-${rowIdx}`}
-            className={`cell ${dragState?.currentPos.col === colIdx && dragState?.currentPos.row === rowIdx ? 'cell-highlight' : ''}`}
-            data-col={colIdx}
-            data-row={rowIdx}
-          >
-            {item && (
-              <ItemComponent
-                item={item}
-                isDragging={dragState?.startPos.col === colIdx && dragState?.startPos.row === rowIdx}
-                style={dragState?.startPos.col === colIdx && dragState?.startPos.row === rowIdx
-                  ? getFloatingStyle(dragState.currentPos)
-                  : undefined}
-                onPointerDown={handlePointerDown}
-              />
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  );
-}
-```
-
-#### CSS Grid 棋盘样式
-
-```css
-.board {
-  display: grid;
-  grid-template-columns: repeat(6, 80px);
-  grid-template-rows: repeat(6, 80px);
-  gap: 4px;
-  padding: 15px;
-  background: var(--color-wood);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  /* ✅ 修复6：确保棋盘在视口中央 */
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.cell {
-  background: var(--color-board-cell);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease;
-  /* ✅ 修复7：合并提示高亮 */
-}
-
-.cell-highlight {
-  background: rgba(201, 168, 76, 0.3);
-  box-shadow: 0 0 8px var(--color-gold);
-}
-
-.item {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 36px;
-  cursor: grab;
-  user-select: none;
-  touch-action: none; /* ✅ 修复6：触摸不缩放页面 */
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.item:active, .item.is-dragging {
-  cursor: grabbing;
-  transform: scale(1.15);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  z-index: 100;
+export interface Requirement {
+  level: 1 | 2 | 3 | 4;
+  type: string;
+  count: number;
 }
 ```
 
 ---
 
-### 步骤 2：修复 Zustand Store 的合并逻辑
+## 四、变现设计（内嵌，非弹窗）
 
-当前 store 的 `mergeItems` 逻辑有问题，需要完善：
-
-```typescript
-// ✅ 修复：正确的合并逻辑
-mergeItems: (sourceId: string, targetId: string) => {
-  const source = state.board.find(i => i?.id === sourceId);
-  const target = state.board.find(i => i?.id === targetId);
-  if (!source || !target) return;
-
-  // 检查是否可以合并
-  if (!canMerge(source, target)) return;
-
-  const newLevel = (source.level + 1) as ItemLevel;
-  const reward = newLevel === 2 ? 50 : 150;
-
-  // 执行合并：移除两个，旧位置放新的
-  const newBoard = state.board.map(item => {
-    if (item?.id === sourceId) return null;
-    if (item?.id === targetId) return null;
-    return item;
-  });
-
-  // 找目标位置放新物品
-  const targetIdx = state.board.findIndex(i => i?.id === targetId);
-  newBoard[targetIdx] = createItem(source.type, newLevel);
-
-  set({
-    board: newBoard,
-    coins: state.coins + reward,
-  });
-},
-```
+| 触发点 | 机制 | 体验 |
+|--------|------|------|
+| 能量=0 | 显示「看广告 +50 能量」按钮 | 不强制，看完即得 |
+| 传说订单出现 | 「传说订单来了！24小时后消失」 | FOMO 制造紧迫感 |
+| L4 合成 | 「太棒了！传说物品！」 | 高光时刻顺带提示 |
+| 扭蛋 | 「抽取新物品」入口在订单面板 | 消耗溢出金币 |
+| 外观商店 | 设置入口 | 不影响数值，不逼氪 |
 
 ---
 
-### 步骤 3：修复 Items 数据结构
+## 五、实施计划 v2.0
 
-当前 `items.ts` 缺少 `canMerge` 函数的实现：
+### Phase 1：核心经济闭环（4h）
 
-```typescript
-// ✅ 添加合并判断函数
-export function canMerge(a: Item | null, b: Item | null): boolean {
-  if (!a || !b) return false;
-  return a.type === b.type && a.level === b.level && a.level < 3;
-}
+**目标：** 能量真正生效 + 订单消耗 + 金币经济运转
 
-// ✅ 添加创建物品函数
-export function createItem(type: ItemType, level: ItemLevel): Item {
-  return { id: `item_${Date.now()}_${Math.random()}`, type, level };
-}
+- [ ] `spendEnergy` 在完成订单时真正扣除并验证
+- [ ] 能量=0 时棋盘变灰 + 禁止合成
+- [ ] 能量购买按钮（金币换能量）
+- [ ] 订单 `energyCost` 字段真正消耗
+- [ ] 订单过期机制（24h 自动刷新）
+- [ ] 完成订单后随机掉落 L4 物品或证据
 
-// ✅ 添加随机 L1 物品
-export function createRandomL1Item(): Item {
-  const types: ItemType[] = ['key', 'photo', 'crystal', 'box', 'badge', 'document'];
-  const type = types[Math.floor(Math.random() * types.length)];
-  return createItem(type, 1);
-}
-```
+### Phase 2：证据与悬念系统（3h）
 
----
+**目标：** 证据收集 + Teaser 触发 + 进度可视化
 
-### 步骤 4：添加 ResizeObserver 响应式适配
+- [ ] `Evidence` 数据结构和状态管理
+- [ ] 完成 L4 订单时随机掉落证据（40% 概率）
+- [ ] 证据收集触发 Teaser 片段（非完整过场，3-5 秒）
+- [ ] 订单面板显示「线索：X/3」进度
+- [ ] 第 3 个证据收集时触发「解锁动画」
+- [ ] Room 数据结构和解锁逻辑
 
-```typescript
-// ✅ 修复3：窗口 resize 时重新计算
-useEffect(() => {
-  const observer = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      const { width, height } = entry.contentRect;
-      setBoardSize({ width, height });
-    }
-  });
+### Phase 3：房间与剧情串联（4h）
 
-  if (boardRef.current) {
-    observer.observe(boardRef.current);
-  }
+**目标：** 房间解锁 + 完整过场 + 章节进度
 
-  return () => observer.disconnect();
-}, []);
-```
+- [ ] 8 个房间数据（描述 + Teaser + 图标）
+- [ ] 房间解锁动画（门打开效果）
+- [ ] 解锁后播放完整过场
+- [ ] 章节进度计算（房间完成数/总房间数）
+- [ ] 过场触发 `chapter_advance`
+- [ ] 剧情系统与房间状态联动
 
----
+### Phase 4：融合系统 + 平衡调优（2h）
 
-### 步骤 5：添加物品生成定时器
+**目标：** 增加升级路径多样性 + 调整经济参数
 
-```typescript
-// ✅ 添加物品自动生成
-useEffect(() => {
-  const interval = setInterval(() => {
-    setGrid(prev => {
-      const empty = findEmptyCell(prev);
-      if (!empty) return prev; // 棋盘满了
-      const newGrid = prev.map(row => [...row]);
-      newGrid[empty.row][empty.col] = createRandomL1Item();
-      return newGrid;
-    });
-  }, 3000);
+- [ ] 任意 L3+L3 → 随机 L4（融合配方）
+- [ ] 同类型 L3+L3 → 同类型 L4（精准配方）
+- [ ] 经济参数调优：掉落率/金币奖励/能量恢复速度
+- [ ] L4 合成「传说时刻」特效（光效 + 音效 + 证据爆出）
 
-  return () => clearInterval(interval);
-}, []);
-```
+### Phase 5：留存与变现（2h）
+
+**目标：** Daily engagement + 变现点内嵌
+
+- [ ] 每日登录奖励系统
+- [ ] 连续登录奖励（第 7 天送传说订单刷新券）
+- [ ] 传说订单系统（高价值订单，24h 过期）
+- [ ] 看广告恢复能量
+- [ ] 扭蛋入口（消耗溢出金币）
+
+### Phase 6：完整测试 + 部署（2h）
+
+- [ ] E2E 测试：合成→订单→证据→房间解锁→过场
+- [ ] 边界测试：能量0、满、溢出
+- [ ] 悬念 Teaser 测试（1/3, 2/3 触发）
+- [ ] 融合系统测试（L3+L3=L4）
+- [ ] 提交 GitHub + Netlify 部署
 
 ---
 
-## 四、性能优化方案（网页游戏专家级）
-
-### 优化 1：CSS Containment 隔离重绘
-
-```css
-.board { contain: layout style paint; }
-.cell { contain: layout style; }
-```
-
-防止一个格子变化导致整个棋盘重绘。
-
-### 优化 2：will-change 提示浏览器
-
-```css
-.item.is-dragging {
-  will-change: transform;
-  transform: scale(1.15);
-}
-```
-
-### 优化 3：requestAnimationFrame 节流
-
-拖拽中的重绘用 `requestAnimationFrame` 节流，不要每帧都 setState：
-
-```typescript
-const handlePointerMove = (e: React.PointerEvent) => {
-  if (!dragState || !rafIdRef.current) return;
-  rafIdRef.current = requestAnimationFrame(() => {
-    // 只在 RAF 回调中更新
-    updateDragPosition(e);
-  });
-};
-```
-
-### 优化 4：React.memo 避免多余渲染
-
-```typescript
-const ItemComponent = React.memo(({ item, isDragging }) => {
-  const config = getItemConfig(item);
-  return (
-    <div className={`item item-${item.type} level-${item.level} ${isDragging ? 'is-dragging' : ''}`}>
-      {config.emoji}
-    </div>
-  );
-});
-```
+**总计：约 17 小时，分 6 个 Phase**
 
 ---
 
-## 五、完整文件结构（重构后）
+## 六、快速验证路径（MVP 先跑通）
+
+如果想先验证核心循环是否好玩，先做 **Phase 1 + Phase 2**，约 7 小时就能跑通：
 
 ```
-src/
-├── ui/
-│   ├── components/
-│   │   ├── MergeBoard.tsx      # 【重写】DOM Grid + Pointer Events
-│   │   ├── MergeBoardOld.tsx    # 备份旧版（参考用）
-│   │   ├── TopBar.tsx
-│   │   ├── OrdersPanel.tsx
-│   │   ├── StoryPanel.tsx
-│   │   └── CutsceneModal.tsx
-│   └── styles/
-│       ├── board.css           # 【新建】棋盘样式
-│       └── animations.css      # 【新建】合并动画
-├── data/
-│   ├── items.ts                # 【修复】canMerge 等函数
-│   ├── orders.ts
-│   └── chapters.ts
-├── stores/
-│   └── gameStore.ts            # 【修复】mergeItems 逻辑
-├── services/
-│   └── saveService.ts
-├── hooks/
-│   ├── useGameLoop.ts          # 【新建】游戏主循环 hook
-│   ├── useDragDrop.ts          # 【新建】拖拽逻辑 hook
-│   └── useResizeObserver.ts    # 【新建】响应式 hook
-└── App.tsx
-
-docs/
-├── REFACTORING-PLAN.md         # 本文档
-├── GAMEPLAY-GUIDE.md
-└── ARCHITECTURE.md             # 【新建】架构说明
+合成 L4 物品
+   ↓
+完成 L4 订单（消耗能量）
+   ↓
+40% 概率掉落「线索碎片」
+   ↓
+收集 3 个碎片
+   ↓
+解锁「书房」+ 播放过场
 ```
 
----
-
-## 六、合并动画规格（专家级）
-
-参考 Gossip Harbor 的视觉反馈：
-
-```css
-/* ✅ 物品移动动画 */
-@keyframes item-swap {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-/* ✅ 合并爆炸动画 */
-@keyframes merge-explode {
-  0%   { transform: scale(0.5); opacity: 0; }
-  30%  { transform: scale(1.3); opacity: 1; }
-  60%  { transform: scale(0.9); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* ✅ 金币飞出动画 */
-@keyframes coin-fly {
-  0%   { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-60px) scale(0.5); opacity: 0; }
-}
-```
-
----
-
-## 七、实施计划
-
-| 阶段 | 任务 | 优先级 | 工作量 |
-|------|------|--------|--------|
-| **Phase 0** | 修复 items.ts（添加 canMerge/createItem） | P0 | 10min |
-| **Phase 0** | 修复 gameStore.ts（mergeItems 逻辑） | P0 | 15min |
-| **Phase 1** | 重写 MergeBoard DOM 版本 | P0 | 2h |
-| **Phase 1** | 添加 CSS 棋盘样式 + 动画 | P0 | 1h |
-| **Phase 2** | 添加 Pointer Events 触摸支持 | P1 | 30min |
-| **Phase 2** | 添加合并视觉反馈 | P1 | 30min |
-| **Phase 3** | ResizeObserver 响应式适配 | P2 | 15min |
-| **Phase 4** | 性能优化（React.memo + RAF） | P2 | 30min |
-| **Phase 5** | 测试 + 部署 | P1 | 30min |
-
-**预计总工时：5.5 小时**
-
----
-
-## 八、验收标准（重构完成判定）
-
-| 验收项 | 测试方法 |
-|--------|----------|
-| ✅ 物品拖拽流畅，无跳跃 | 用鼠标拖物品移动 10 格，观察是否平滑 |
-| ✅ 相同物品合并后变高级 | 拖动两个 L1 到一起，看是否变成 L2 |
-| ✅ 合并后金币增加 | 观察 TopBar 金币数字是否增加（+50 或 +150） |
-| ✅ 棋盘自动生成新物品 | 等待 3 秒，看空白格子是否出现新物品 |
-| ✅ 手机触摸可玩 | Chrome DevTools mobile mode 测试 |
-| ✅ 窗口 resize 后棋盘居中 | 拖动窗口边缘，观察棋盘是否保持居中 |
-| ✅ 60fps 无卡顿 | Chrome Performance Monitor 验证 |
-
----
-
-*本方案由网页游戏专家审计制定 v2.0*
+跑通后立即知道：这个循环是否吸引玩家，再继续扩展。

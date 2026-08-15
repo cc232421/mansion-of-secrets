@@ -1,4 +1,4 @@
-export type ItemLevel = 1 | 2 | 3;
+export type ItemLevel = 1 | 2 | 3 | 4;
 
 export type ItemType = 'key' | 'photo' | 'crystal' | 'box' | 'badge' | 'document';
 
@@ -30,9 +30,15 @@ export const MERGE_ITEMS: Record<ItemLevel, MergeItemConfig[]> = {
     { type: 'crystal', displayName: 'Crystal Ball', emoji: '🔮', color: '#4169E1', glowColor: '#6495ED', mergeReward: 150 },
   ],
   3: [
-    { type: 'box', displayName: 'Heirloom Chest', emoji: '💎', color: '#8B0000', glowColor: '#DC143C', mergeReward: 300 },
-    { type: 'badge', displayName: 'Family Crest', emoji: '🏅', color: '#B8860B', glowColor: '#DAA520', mergeReward: 300 },
-    { type: 'document', displayName: 'Secret Document', emoji: '📜', color: '#D2691E', glowColor: '#F4A460', mergeReward: 300 },
+    // L3 items share same type as L2 (key→key, photo→photo, crystal→crystal) for upgrade continuity
+    { type: 'key', displayName: 'Master Key', emoji: '🗝️', color: '#B8860B', glowColor: '#FFD700', mergeReward: 300 },
+    { type: 'photo', displayName: 'Family Portrait', emoji: '🖼️', color: '#8B0000', glowColor: '#B22222', mergeReward: 300 },
+    { type: 'crystal', displayName: 'Crystal Crown', emoji: '💎', color: '#4169E1', glowColor: '#00BFFF', mergeReward: 300 },
+  ],
+  4: [
+    { type: 'key', displayName: 'Royal Crown', emoji: '👑', color: '#FFD700', glowColor: '#FFA500', mergeReward: 500 },
+    { type: 'photo', displayName: 'Album of Memories', emoji: '📒', color: '#8B4513', glowColor: '#CD853F', mergeReward: 500 },
+    { type: 'crystal', displayName: 'Diamond Collection', emoji: '💠', color: '#E0FFFF', glowColor: '#AFEEEE', mergeReward: 500 },
   ],
 };
 
@@ -70,7 +76,7 @@ export function getItemConfig(item: Item): MergeItemConfig {
 // Check if two items can merge
 export function canMerge(a: Item | null | undefined, b: Item | null | undefined): boolean {
   if (!a || !b) return false;
-  if (a.level >= 3 || b.level >= 3) return false;
+  if (a.level >= 4 || b.level >= 4) return false;
   return a.type === b.type && a.level === b.level;
 }
 

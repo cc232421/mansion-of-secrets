@@ -3,27 +3,18 @@ import { useGameStore } from '../../stores/gameStore';
 import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem } from '../../data/items';
 import './MergeBoard.css';
 
-// Constants
+// Board constants
 const CELL_SIZE = 72;
 const CELL_GAP = 4;
-const CELL_TOTAL = CELL_SIZE + CELL_GAP; // 76
+const CELL_TOTAL = CELL_SIZE + CELL_GAP; // 76px per cell
 const COLS = 6;
 const ROWS = 6;
 
-interface DragInfo {
-  itemId: string;
+interface DragState {
   item: Item;
-  sourceCol: number;
-  sourceRow: number;
-  clientX: number;
-  clientY: number;
-}
-
-interface FloatItem {
-  id: string;
-  item: Item;
-  clientX: number;
-  clientY: number;
+  sourceIndex: number;
+  currentCol: number;
+  currentRow: number;
 }
 
 interface MergeEffect {
@@ -34,51 +25,42 @@ interface MergeEffect {
 }
 
 export function MergeBoard() {
-  const { addCoins } = useGameStore();
+  const { board, setBoardItems, addCoins, energy } = useGameStore();
+  const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
 
-  // 2D grid: grid[row][col]
-  const [grid, setGrid] = useState<(Item | null)[][]>(() => {
-    const g: (Item | null)[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-    for (let i = 0; i < 8; i++) {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
-      g[row][col] = createRandomL1Item();
-    }
-    return g;
-  });
-
-  // Currently floating item (being dragged)
-  const [floatItem, setFloatItem] = useState<FloatItem | null>(null);
-
-  // Highlight cell when hovering with drag
+  // Current drag state
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const [mouseX, setMouseX] = useState(0);
+  const [mouseY, setMouseY] = useState(0);
   const [highlightCell, setHighlightCell] = useState<{ col: number; row: number } | null>(null);
-
-  // Merge effect animations
   const [mergeEffects, setMergeEffects] = useState<MergeEffect[]>([]);
+  const [noEnergy, setNoEnergy] = useState(false);
 
   const boardRef = useRef<HTMLDivElement>(null);
-  const dragInfoRef = useRef<DragInfo | null>(null);
 
-  // Auto-spawn items
+  // ─── Energy check ───────────────────────────────────────────────
+  useEffect(() => {
+    const e = currentEnergy;
+    setNoEnergy(e === 0);
+  }, [currentEnergy]);
+
+  // ─── Auto-spawn items ──────────────────────────────────────────
   useEffect(() => {
     const interval = setInterval(() => {
-      setGrid(prev => {
-        const empty: { col: number; row: number }[] = [];
-        for (let r = 0; r < ROWS; r++)
-          for (let c = 0; c < COLS; c++)
-            if (!prev[r][c]) empty.push({ col: c, row: r });
-        if (empty.length === 0) return prev;
-        const target = empty[Math.floor(Math.random() * empty.length)];
-        const newGrid = prev.map(r => [...r]);
-        newGrid[target.row][target.col] = createRandomL1Item();
-        return newGrid;
-      });
+      // Find empty slot
+      const emptyIndices: number[] = [];
+      for (let i = 0; i < 36; i++) {
+        if (!board[i]) emptyIndices.push(i);
+      }
+      if (emptyIndices.length === 0) return;
+      const idx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      setBoardItems([{ index: idx, item: createRandomL1Item() }]);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [board, setBoardItems]);
 
-  // Convert client coords → grid cell
-  const clientToGrid = useCallback((clientX: number, clientY: number) => {
+  // ─── Client → grid cell ────────────────────────────────────────
+  const clientToCell = useCallback((clientX: number, clientY: number) => {
     const board = boardRef.current;
     if (!board) return null;
     const rect = board.getBoundingClientRect();
@@ -86,119 +68,111 @@ export function MergeBoard() {
     const relY = clientY - rect.top;
     const col = Math.floor(relX / CELL_TOTAL);
     const row = Math.floor(relY / CELL_TOTAL);
-    if (col >= 0 && col < COLS && row >= 0 && row < ROWS) return { col, row };
+    if (col >= 0 && col < COLS && row >= 0 && row < ROWS) return { col, row, index: row * COLS + col };
     return null;
   }, []);
 
-  // Pointer Down on item
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>, col: number, row: number) => {
-    const item = grid[row][col];
+  // ─── Pointer Down ──────────────────────────────────────────────
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>, index: number) => {
+    if (noEnergy) return;
+    const item = board[index];
     if (!item) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    dragInfoRef.current = {
-      itemId: item.id,
-      item,
-      sourceCol: col,
-      sourceRow: row,
-      clientX: e.clientX,
-      clientY: e.clientY,
-    };
-    setFloatItem({ id: item.id, item, clientX: e.clientX, clientY: e.clientY });
-    // Remove from grid immediately
-    setGrid(prev => {
-      const newGrid = prev.map(r => [...r]);
-      newGrid[row][col] = null;
-      return newGrid;
-    });
+    const col = index % COLS;
+    const row = Math.floor(index / COLS);
+    setMouseX(e.clientX);
+    setMouseY(e.clientY);
+    setDrag({ item, sourceIndex: index, currentCol: col, currentRow: row });
   };
 
-  // Global pointer move (for floating item)
+  // ─── Pointer Move ───────────────────────────────────────────────
   useEffect(() => {
-    if (!floatItem) return;
-
+    if (!drag) return;
     const handleMove = (e: PointerEvent) => {
-      setFloatItem(prev => prev ? { ...prev, clientX: e.clientX, clientY: e.clientY } : null);
-      const pos = clientToGrid(e.clientX, e.clientY);
-      setHighlightCell(pos);
+      setMouseX(e.clientX);
+      setMouseY(e.clientY);
+      const pos = clientToCell(e.clientX, e.clientY);
+      if (pos) {
+        setHighlightCell(pos);
+        setDrag(prev => prev ? { ...prev, currentCol: pos.col, currentRow: pos.row } : null);
+      } else {
+        setHighlightCell(null);
+      }
     };
+    window.addEventListener('pointermove', handleMove);
+    return () => window.removeEventListener('pointermove', handleMove);
+  }, [drag, clientToCell]);
 
+  // ─── Pointer Up ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!drag) return;
     const handleUp = (e: PointerEvent) => {
-      if (!dragInfoRef.current) return;
-      const pos = clientToGrid(e.clientX, e.clientY);
+      const pos = clientToCell(e.clientX, e.clientY);
 
       if (pos) {
-        const targetItem = grid[pos.row][pos.col];
+        const targetIndex = pos.row * COLS + pos.col;
+        const targetItem = board[targetIndex];
 
-        if (targetItem && canMerge(floatItem!.item, targetItem)) {
+        if (targetItem && canMerge(drag.item, targetItem) && targetIndex !== drag.sourceIndex) {
           // ✅ MERGE
-          const newLevel = (floatItem!.item.level + 1) as ItemLevel;
-          const reward = newLevel === 2 ? 50 : 150;
+          const newLevel = (drag.item.level + 1) as ItemLevel;
+          const reward = newLevel === 2 ? 50 : newLevel === 3 ? 150 : 300;
 
-          setGrid(prev => {
-            const newGrid = prev.map(r => [...r]);
-            newGrid[pos.row][pos.col] = createItem(newLevel, floatItem!.item.type);
-            return newGrid;
-          });
-
-          setMergeEffects(prev => [...prev, { col: pos.col, row: pos.row, coins: reward, key: `merge_${Date.now()}` }]);
+          const updates: { index: number; item: Item | null }[] = [
+            { index: drag.sourceIndex, item: null },
+            { index: targetIndex, item: createItem(newLevel, drag.item.type) },
+          ];
+          setBoardItems(updates);
+          setMergeEffects(prev => [...prev, { col: pos.col, row: pos.row, coins: reward, key: `m_${Date.now()}` }]);
           setTimeout(() => setMergeEffects(prev => prev.slice(1)), 1000);
           addCoins(reward);
-        } else if (!targetItem) {
-          // ✅ MOVE to empty
-          setGrid(prev => {
-            const newGrid = prev.map(r => [...r]);
-            newGrid[pos.row][pos.col] = floatItem!.item;
-            return newGrid;
-          });
-        } else {
-          // ❌ Return to source
-          setGrid(prev => {
-            const newGrid = prev.map(r => [...r]);
-            newGrid[dragInfoRef.current!.sourceRow][dragInfoRef.current!.sourceCol] = floatItem!.item;
-            return newGrid;
-          });
+        } else if (!targetItem && targetIndex !== drag.sourceIndex) {
+          // ✅ MOVE
+          const updates: { index: number; item: Item | null }[] = [
+            { index: drag.sourceIndex, item: null },
+            { index: targetIndex, item: drag.item },
+          ];
+          setBoardItems(updates);
         }
-      } else {
-        // Dropped outside — return to source
-        setGrid(prev => {
-          const newGrid = prev.map(r => [...r]);
-          newGrid[dragInfoRef.current!.sourceRow][dragInfoRef.current!.sourceCol] = floatItem!.item;
-          return newGrid;
-        });
       }
+      // Dropped outside → item stays at source
 
-      dragInfoRef.current = null;
-      setFloatItem(null);
+      setDrag(null);
       setHighlightCell(null);
     };
-
-    window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleUp);
-    return () => {
-      window.removeEventListener('pointermove', handleMove);
-      window.removeEventListener('pointerup', handleUp);
-    };
-  }, [floatItem, grid, clientToGrid, addCoins]);
+    return () => window.removeEventListener('pointerup', handleUp);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drag, board, clientToCell, setBoardItems, addCoins]);
 
+  // ─── Render ───────────────────────────────────────────────────
   return (
-    <div className="merge-board-wrapper">
+    <div className={`merge-board-wrapper ${noEnergy ? 'no-energy' : ''}`}>
+      {/* No energy overlay */}
+      {noEnergy && (
+        <div className="energy-overlay">
+          <p>⚡ Out of Energy!</p>
+          <p className="text-sm mt-1 opacity-70">Buy more in Orders panel</p>
+        </div>
+      )}
+
       {/* Floating dragged item */}
-      {floatItem && (
+      {drag && (
         <div
           className="merge-item floating"
           style={{
             position: 'fixed',
-            left: floatItem.clientX - 36,
-            top: floatItem.clientY - 36,
+            left: mouseX - CELL_SIZE / 2,
+            top: mouseY - CELL_SIZE / 2,
             zIndex: 9999,
             pointerEvents: 'none',
           }}
         >
-          <span className="item-emoji">{getItemConfig(floatItem.item).emoji}</span>
+          <span className="item-emoji">{getItemConfig(drag.item).emoji}</span>
         </div>
       )}
 
-      {/* The board grid */}
+      {/* Board grid */}
       <div
         ref={boardRef}
         className="merge-board"
@@ -208,34 +182,36 @@ export function MergeBoard() {
           gap: `${CELL_GAP}px`,
         }}
       >
-        {grid.map((row, rowIdx) =>
-          row.map((item, colIdx) => {
-            const isHighlight = highlightCell?.col === colIdx && highlightCell?.row === rowIdx;
-            const effect = mergeEffects.find(e => e.col === colIdx && e.row === rowIdx);
-            return (
-              <div
-                key={`${colIdx}-${rowIdx}`}
-                className={`merge-cell ${isHighlight ? 'merge-cell-highlight' : ''}`}
-                style={{ width: CELL_SIZE, height: CELL_SIZE }}
-              >
-                {item && (
-                  <div
-                    className={`merge-item level-${item.level}`}
-                    onPointerDown={(e) => handlePointerDown(e, colIdx, rowIdx)}
-                  >
-                    <span className="item-emoji">{getItemConfig(item).emoji}</span>
-                    {item.level === 3 && <span className="item-star">★</span>}
-                  </div>
-                )}
-                {effect && (
-                  <div className="merge-coin-effect" key={effect.key}>
-                    +{effect.coins}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
+        {board.map((item, index) => {
+          const col = index % COLS;
+          const row = Math.floor(index / COLS);
+          const isHighlight = highlightCell?.col === col && highlightCell?.row === row;
+          const isDragSource = drag?.sourceIndex === index;
+          const effect = mergeEffects.find(e => e.col === col && e.row === row);
+
+          return (
+            <div
+              key={index}
+              className={`merge-cell ${isHighlight ? 'merge-cell-highlight' : ''}`}
+              style={{ width: CELL_SIZE, height: CELL_SIZE }}
+            >
+              {item && !isDragSource && (
+                <div
+                  className={`merge-item level-${item.level}`}
+                  onPointerDown={(e) => handlePointerDown(e, index)}
+                >
+                  <span className="item-emoji">{getItemConfig(item).emoji}</span>
+                  {item.level >= 3 && <span className="item-star">★</span>}
+                </div>
+              )}
+              {effect && (
+                <div className="merge-coin-effect" key={effect.key}>
+                  +{effect.coins}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
