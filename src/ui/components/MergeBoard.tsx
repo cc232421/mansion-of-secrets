@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../stores/gameStore';
 import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem, MERGE_ITEMS } from '../../data/items';
 import { Sound } from '../../services/soundService';
@@ -25,6 +26,7 @@ interface MergeEffect {
 }
 
 export function MergeBoard() {
+  const { t } = useTranslation();
   const { board, setBoardItems, addCoins } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
 
@@ -187,8 +189,8 @@ export function MergeBoard() {
       {/* No energy overlay */}
       {noEnergy && (
         <div className="energy-overlay">
-          <p>⚡ Out of Energy!</p>
-          <p className="text-sm mt-1 opacity-70">Buy more in Orders panel</p>
+          <p>⚡ {t('menu.outOfEnergy')}</p>
+          <p className="text-sm mt-1 opacity-70">{t('menu.buyMore')}</p>
         </div>
       )}
 

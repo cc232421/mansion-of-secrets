@@ -67,7 +67,21 @@
     "evidenceCollected": "Evidence: {{current}}/{{total}}",
     "teaserUnlock": "Teaser Unlocked!",
     "roomUnlocked": "Room Unlocked!",
-    "chapterComplete": "Chapter Complete!"
+    "chapterComplete": "Chapter Complete!",
+    "characters": "Characters",
+    "hint": "Merge items to complete orders and uncover new secrets...",
+    "emily": "Emily",
+    "emilyRole": "Protagonist",
+    "brad": "Brad",
+    "bradRole": "Husband",
+    "claire": "Claire",
+    "claireRole": "Sister"
+  },
+  "cutscene": {
+    "skip": "Skip",
+    "next": "Next",
+    "auto": "Auto",
+    "tapToContinue": "Tap anywhere to continue..."
   },
   "rooms": {
     "title": "The Mansion",

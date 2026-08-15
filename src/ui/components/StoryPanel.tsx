@@ -8,7 +8,7 @@ export function StoryPanel() {
   const { storyProgress, currentChapter, seenCutscenes, evidence } = useGameStore();
 
   const currentChapterData = CHAPTERS[currentChapter - 1]?.[0];
-  const currentChapterObj = { title: currentChapterData?.title || 'Chapter 1' };
+  const currentChapterObj = { title: currentChapterData?.title || t('story.chapterLabel', { n: currentChapter }) };
 
   return (
     <div className="h-full flex flex-col">
@@ -16,12 +16,12 @@ export function StoryPanel() {
         className="font-display text-xl text-[#C9A84C] mb-3 flex items-center gap-2"
         style={{ fontFamily: 'Georgia, serif' }}
       >
-        🔍 Family Secrets
+        🔍 {t('story.title')}
       </h2>
 
       {/* Chapter progress */}
       <div className="mb-4">
-        <p className="text-sm text-[#FFF8F0]/60 mb-1">Chapter {currentChapter}</p>
+        <p className="text-sm text-[#FFF8F0]/60 mb-1">{t('story.chapterLabel', { n: currentChapter })}</p>
         <p className="text-[#FFF8F0] font-semibold">
                 {currentChapterObj.title}
               </p>
@@ -32,12 +32,12 @@ export function StoryPanel() {
 
       {/* Characters */}
       <div className="mb-4">
-        <p className="text-xs text-[#FFF8F0]/40 uppercase tracking-wider mb-2">Characters</p>
+        <p className="text-xs text-[#FFF8F0]/40 uppercase tracking-wider mb-2">{t('story.characters')}</p>
         <div className="space-y-2">
           {[
-            { name: 'Emily', role: 'Protagonist', emoji: '👩', color: '#8B2942' },
-            { name: 'Brad', role: 'Husband', emoji: '👨', color: '#4A5568' },
-            { name: 'Claire', role: 'Sister', emoji: '👩‍🦰', color: '#9F7AEA' },
+            { name: t('story.emily'), role: t('story.emilyRole'), emoji: '👩', color: '#8B2942' },
+            { name: t('story.brad'), role: t('story.bradRole'), emoji: '👨', color: '#4A5568' },
+            { name: t('story.claire'), role: t('story.claireRole'), emoji: '👩\u200d🦰', color: '#9F7AEA' },
           ].map(char => (
             <div key={char.name} className="flex items-center gap-2">
               <span style={{ fontSize: 20 }}>{char.emoji}</span>
@@ -89,7 +89,7 @@ export function StoryPanel() {
         style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)' }}
       >
         <p className="text-[#C9A84C]">
-          💡 Merge items to complete orders and uncover new secrets...
+          💡 {t('story.hint')}
         </p>
       </div>
     </div>

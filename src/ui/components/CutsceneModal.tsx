@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CHAPTERS, type Cutscene } from '../../data/chapters';
 import { useGameStore } from '../../stores/gameStore';
 
@@ -15,6 +16,7 @@ const SPEAKER_COLORS: Record<string, string> = {
 };
 
 export function CutsceneModal({ onClose }: CutsceneModalProps) {
+  const { t } = useTranslation();
   const [chapterIdx, setChapterIdx] = useState(0);
   const [lineIdx, setLineIdx] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(false);
@@ -106,23 +108,23 @@ export function CutsceneModal({ onClose }: CutsceneModalProps) {
         {/* Continue indicator */}
         <div className="text-center mb-6">
           <p className="text-[#C9A84C]/60 text-sm animate-pulse">
-            Tap anywhere to continue...
+            {t('cutscene.tapToContinue')}
           </p>
         </div>
 
         {/* Controls */}
         <div className="flex justify-center gap-4">
           <button className="btn-primary text-sm" onClick={handleSkip}>
-            Skip
+            {t('cutscene.skip')}
           </button>
           <button
             className={`btn-primary text-sm ${isAutoPlay ? 'ring-2 ring-[#C9A84C]' : ''}`}
             onClick={() => setIsAutoPlay(!isAutoPlay)}
           >
-            {isAutoPlay ? '⏸ Auto' : '▶ Auto'}
+            {isAutoPlay ? '⏸ ' + t('cutscene.auto') : '▶ ' + t('cutscene.auto')}
           </button>
           <button className="btn-gold text-sm" onClick={handleNext}>
-            Next →
+            {t('cutscene.next')} →
           </button>
         </div>
       </div>

@@ -61,13 +61,27 @@
   "story": {
     "title": "家族秘密",
     "progress": "剧情进度",
-    "chapterLabel": "第 {{n}} 章",
-    "locked": "已锁定",
+    "chapterLabel": "第{{n}}章",
+    "locked": "未解锁",
     "unlocked": "已解锁",
-    "evidenceCollected": "证据：{{current}}/{{total}}",
-    "teaserUnlock": "线索已解锁！",
-    "roomUnlocked": "房间已解锁！",
-    "chapterComplete": "章节完成！"
+    "evidenceCollected": "证据收集: {{current}}/{{total}}",
+    "teaserUnlock": "预告解锁！",
+    "roomUnlocked": "房间解锁！",
+    "chapterComplete": "章节完成！",
+    "characters": "角色",
+    "hint": "合并物品完成订单，揭开新的秘密...",
+    "emily": "艾米莉",
+    "emilyRole": "女主角",
+    "brad": "布拉德",
+    "bradRole": "丈夫",
+    "claire": "克莱尔",
+    "claireRole": "姐姐"
+  },
+  "cutscene": {
+    "skip": "跳过",
+    "next": "下一步",
+    "auto": "自动播放",
+    "tapToContinue": "点击任意处继续..."
   },
   "rooms": {
     "title": "神秘豪宅",

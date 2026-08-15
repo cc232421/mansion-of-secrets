@@ -165,6 +165,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!order) return { success: false, message: 'Order not found' };
     if (order.completed) return { success: false, message: 'Already completed' };
 
+    // Check energy first (do NOT deduct yet)
     const currentEnergy = state.calculateCurrentEnergy();
     if (currentEnergy < order.energyCost) {
       return { success: false, message: `Not enough energy (need ${order.energyCost})` };
@@ -187,7 +188,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }
 
-    // Deduct energy first
+    // All checks passed — NOW deduct energy
     set({ energy: currentEnergy - order.energyCost, energyLastUpdate: Date.now() });
 
     // Remove consumed items
