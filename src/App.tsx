@@ -7,13 +7,17 @@ import { OrdersPanel } from './ui/components/OrdersPanel';
 import { StoryPanel } from './ui/components/StoryPanel';
 import { CutsceneModal } from './ui/components/CutsceneModal';
 import { CHAPTERS } from './data/chapters';
+import { startEnergyTimer } from './stores/gameStore';
 
 function App() {
   const [showCutscene, setShowCutscene] = useState(false);
   const [activeView, setActiveView] = useState<'merge' | 'rooms'>('merge');
   const { storyProgress, currentChapter } = useGameStore();
 
-  // Auto-save every 30 seconds
+  // Start energy auto-regen timer
+  useEffect(() => {
+    startEnergyTimer();
+  }, []);
   useEffect(() => {
     const interval = setInterval(async () => {
       const state = useGameStore.getState();

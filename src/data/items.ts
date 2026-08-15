@@ -68,9 +68,22 @@ export function createItem(level: ItemLevel, type: ItemType): Item {
   };
 }
 
-// Get config for an item
+// Get config for an item — safe version returns fallback for unknown items
 export function getItemConfig(item: Item): MergeItemConfig {
-  return MERGE_ITEMS[item.level].find(c => c.type === item.type)!;
+  const configs = MERGE_ITEMS[item.level];
+  const config = configs?.find(c => c.type === item.type);
+  if (!config) {
+    // Fallback: return a generic config so the game doesn't crash
+    return {
+      type: item.type as ItemType,
+      displayName: `L${item.level} ${item.type}`,
+      emoji: '❓',
+      color: '#888',
+      glowColor: '#aaa',
+      mergeReward: 0,
+    };
+  }
+  return config;
 }
 
 // Check if two items can merge

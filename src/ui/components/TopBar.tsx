@@ -1,8 +1,10 @@
 import React from 'react';
 import { useGameStore } from '../../stores/gameStore';
 
+const MAX_ENERGY = 120;
+
 export function TopBar() {
-  const { coins, energy, calculateCurrentEnergy } = useGameStore();
+  const { coins, calculateCurrentEnergy } = useGameStore();
   const currentEnergy = calculateCurrentEnergy();
 
   return (
@@ -62,7 +64,7 @@ export function TopBar() {
             minWidth: 80,
           }}
         >
-          {currentEnergy} / 120
+          {currentEnergy} / {MAX_ENERGY}
         </span>
       </div>
 

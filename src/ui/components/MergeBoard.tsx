@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
-import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem } from '../../data/items';
+import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem, MERGE_ITEMS } from '../../data/items';
 import './MergeBoard.css';
 
 // Board constants
@@ -114,9 +114,11 @@ export function MergeBoard() {
         const targetItem = board[targetIndex];
 
         if (targetItem && canMerge(drag.item, targetItem) && targetIndex !== drag.sourceIndex) {
-          // ✅ MERGE
+          // ✅ MERGE — use mergeReward from items config (NOT hardcoded)
           const newLevel = (drag.item.level + 1) as ItemLevel;
-          const reward = newLevel === 2 ? 50 : newLevel === 3 ? 150 : 300;
+          const configs = MERGE_ITEMS[newLevel];
+          const cfg = configs?.find(c => c.type === drag.item.type);
+          const reward = cfg?.mergeReward ?? 300;
 
           const updates: { index: number; item: Item | null }[] = [
             { index: drag.sourceIndex, item: null },

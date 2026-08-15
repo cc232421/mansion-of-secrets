@@ -37,9 +37,9 @@ export function OrdersPanel() {
   const handleFulfill = (orderId: string) => {
     const result = fulfillOrder(orderId);
     if (result.success) {
-      setMessage('✅ Order completed! +coins');
+      setMessage('✅ Order completed!');
     } else {
-      setMessage(`❌ ${result.error}`);
+      setMessage(`❌ ${result.message}`);
     }
     setTimeout(() => setMessage(null), 2000);
   };

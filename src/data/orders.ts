@@ -83,6 +83,25 @@ export const ORDER_TEMPLATES: OrderTemplate[] = [
     rewardCoins: 500,
     energyCost: 30,
   },
+  // ── L4 Special Orders ────────────────────────────────────────
+  {
+    description: 'The Royal Crown Collection',
+    requirements: [{ level: 4, type: 'key', count: 1 }],
+    rewardCoins: 1000,
+    energyCost: 40,
+  },
+  {
+    description: 'Album of Lost Memories',
+    requirements: [{ level: 4, type: 'photo', count: 1 }],
+    rewardCoins: 1000,
+    energyCost: 40,
+  },
+  {
+    description: 'Diamond Treasury',
+    requirements: [{ level: 4, type: 'crystal', count: 1 }],
+    rewardCoins: 1000,
+    energyCost: 40,
+  },
 ];
 
 export function createRandomOrder(): Order {
