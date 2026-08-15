@@ -116,43 +116,99 @@ export function playMerge(level: number) {
 }
 
 /**
- * Legendary merge — L4 special sound with shimmer + chord
+ * Legendary merge — L4 special sound: Celestial Chime
+ *
+ * Three-layer design for a magical, joyful, triumphant feel:
+ *   Layer 1: Ascending arpeggio (C5→E5→G5→C6→E6) with bell overtones
+ *   Layer 2: Warm bass harmony (C4 + G4) for body and power
+ *   Layer 3: High-frequency sparkle (3 closely-spaced sines) for joy
+ *
+ * Bell harmonics [1.0, 2.756, 5.404, 8.933] create a bell/glass tone.
+ * Ascending arpeggio conveys escalating achievement and excitement.
+ * Pure sine waves throughout = clean, pleasant, not harsh.
  */
 export function playLegendaryMerge() {
   try {
     const ctx = getAudioContext();
     const now = ctx.currentTime;
 
-    // ── Shimmer layer: rapid high-frequency tremolo ──
-    for (let i = 0; i < 6; i++) {
-      const freq = 2000 + i * 400;
+    // ── Layer 1: Ascending arpeggio with bell overtones ─────────────
+    // C major arpeggio climbing: C5 → E5 → G5 → C6 → E6
+    // Bell harmonic ratios give a glass/crystal bell quality
+    const BELL_RATIOS = [1.0, 2.756, 5.404, 8.933];
+    const arpeggio = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+    const NOTE_INTERVAL = 0.065; // 65ms between notes — fast = exciting
+
+    arpeggio.forEach((freq, noteIdx) => {
+      const noteStart = now + noteIdx * NOTE_INTERVAL;
+
+      BELL_RATIOS.forEach((ratio, harmIdx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq * ratio, noteStart);
+
+        // Harmonics decay faster than fundamental (realistic bell behavior)
+        const harmDecay = 0.3 + harmIdx * 0.05;
+        const harmAmp = masterVolume * 0.15 / (harmIdx * 1.5 + 1);
+        gain.gain.setValueAtTime(harmAmp, noteStart);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + harmDecay);
+
+        osc.start(noteStart);
+        osc.stop(noteStart + harmDecay + 0.05);
+      });
+    });
+
+    // ── Layer 2: Warm bass harmony for body ─────────────────────────
+    // C4 (261.63Hz) + G4 (392Hz) — open fifth, rich and warm
+    const bassFreqs = [261.63, 392.0];
+    bassFreqs.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
 
       osc.connect(gain);
       gain.connect(ctx.destination);
-      lfo.connect(lfoGain);
-      lfoGain.connect(gain.gain);
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now);
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(20, now);
-      lfoGain.gain.setValueAtTime(0.15, now);
+      // Slight volume swell then long decay
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(masterVolume * 0.12, now + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
 
-      gain.gain.setValueAtTime(masterVolume * 0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-
-      lfo.start(now);
       osc.start(now);
-      lfo.stop(now + 0.8);
-      osc.stop(now + 0.8);
-    }
+      osc.stop(now + 1.5);
+    });
 
-    // ── Chord layer: major triad + octave ──
-    const chordFreqs = [523.25, 659.25, 783.99, 1046.5]; // C major chord
+    // ── Layer 3: High-frequency sparkle — joy and magic ─────────────
+    // Three closely-spaced sines (not harmonically related) for shimmer
+    // Spread around 2400-3800Hz — audible sparkle without harshness
+    const sparkleFreqs = [2354, 2937, 3689];
+    sparkleFreqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.04);
+
+      const sparkleStart = now + i * 0.04;
+      gain.gain.setValueAtTime(masterVolume * 0.08, sparkleStart);
+      gain.gain.exponentialRampToValueAtTime(0.0001, sparkleStart + 1.0);
+
+      osc.start(sparkleStart);
+      osc.stop(sparkleStart + 1.05);
+    });
+
+    // ── Final resolution chord: C major with octave ──────────────────
+    // Enters at ~350ms, gives the "triumphant resolution" feel
+    const chordFreqs = [1046.5, 1318.5, 1567.98, 2093.0]; // C6 E6 G6 C7
     chordFreqs.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -160,15 +216,15 @@ export function playLegendaryMerge() {
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + 0.05 + i * 0.03);
+      osc.type = 'sine';
+      const chordStart = now + 0.35 + i * 0.025;
+      osc.frequency.setValueAtTime(freq, chordStart);
 
-      const startTime = now + 0.05 + i * 0.03;
-      gain.gain.setValueAtTime(masterVolume * 0.18, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.0);
+      gain.gain.setValueAtTime(masterVolume * 0.14, chordStart);
+      gain.gain.exponentialRampToValueAtTime(0.0001, chordStart + 1.5);
 
-      osc.start(startTime);
-      osc.stop(startTime + 1.0);
+      osc.start(chordStart);
+      osc.stop(chordStart + 1.6);
     });
   } catch (_) {}
 }
