@@ -1,0 +1,16 @@
+{
+  "name": "Mansion of Secrets",
+  "short_name": "Mansion",
+  "description": "Free browser merge game with shocking American family drama",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a0f0a",
+  "theme_color": "#8B2942",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

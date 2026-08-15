@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-burgundy: #8B2942;
+  --color-gold: #C9A84C;
+  --color-cream: #FFF8F0;
+  --color-dark-brown: #2D1B14;
+  --color-wood: #3D2914;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a0f0a;
+}
+
+body {
+  font-family: 'Source Sans 3', 'Georgia', serif;
+  color: var(--color-cream);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-dark-brown);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-gold);
+  border-radius: 3px;
+}
+
+/* Typography */
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Gold gradient text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #C9A84C 0%, #FFD700 50%, #C9A84C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button base */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-burgundy) 0%, #6B1D32 100%);
+  color: var(--color-cream);
+  border: 2px solid var(--color-gold);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #A33352 0%, #8B2942 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--color-gold) 0%, #A8872E 100%);
+  color: var(--color-dark-brown);
+  border: 2px solid #FFD700;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.btn-gold:hover {
+  background: linear-gradient(135deg, #D4B356 0%, var(--color-gold) 100%);
+  transform: translateY(-1px);
+}
+
+/* Panel base */
+.panel {
+  background: linear-gradient(180deg, rgba(45,27,20,0.95) 0%, rgba(61,41,20,0.95) 100%);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+/* Cutscene overlay */
+.cutscene-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Order card */
+.order-card {
+  background: rgba(61,41,20,0.8);
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.order-card:hover {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 12px rgba(201,168,76,0.2);
+}
+
+/* Story progress */
+.progress-bar {
+  height: 8px;
+  background: rgba(201,168,76,0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-burgundy), var(--color-gold));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Animations */
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(201,168,76,0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
