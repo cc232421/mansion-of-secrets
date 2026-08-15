@@ -1,0 +1,260 @@
+/* ==========================================
+   Mansion of Secrets — Merge Board Styles
+   ========================================== */
+
+/* Board wrapper — centers the board */
+.merge-board-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  contain: layout style paint;
+}
+
+/* The board grid */
+.merge-board {
+  display: grid;
+  padding: 12px;
+  background: linear-gradient(145deg, #3D2914 0%, #2D1B14 100%);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 3px #C9A84C,
+    0 0 0 6px #8B2942,
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 2px 4px rgba(201, 168, 76, 0.2);
+  position: relative;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Individual cell */
+.merge-cell {
+  background: linear-gradient(145deg, #F5E6D3 0%, #E8D5BE 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  contain: layout style;
+}
+
+.merge-cell::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 41, 66, 0.15);
+  pointer-events: none;
+}
+
+/* Highlight when dragging over */
+.merge-cell-highlight {
+  background: linear-gradient(145deg, rgba(201, 168, 76, 0.5) 0%, rgba(201, 168, 76, 0.3) 100%);
+  box-shadow:
+    0 0 0 2px #C9A84C,
+    0 0 12px rgba(201, 168, 76, 0.5);
+  animation: cell-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes cell-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px #C9A84C, 0 0 12px rgba(201, 168, 76, 0.5); }
+  50% { box-shadow: 0 0 0 3px #C9A84C, 0 0 20px rgba(201, 168, 76, 0.8); }
+}
+
+/* Merge effect cell */
+.merge-cell-effect {
+  animation: merge-flash 0.8s ease-out;
+}
+
+@keyframes merge-flash {
+  0% { background: linear-gradient(145deg, #FFD700 0%, #FFA500 100%); }
+  100% { background: linear-gradient(145deg, #F5E6D3 0%, #E8D5BE 100%); }
+}
+
+/* ==========================================
+   Items
+   ========================================== */
+
+.merge-item {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  will-change: transform;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  contain: layout style;
+}
+
+/* Level-based styling */
+.merge-item.level-1 {
+  background: linear-gradient(145deg, #E8D5BE 0%, #D4C4A8 100%);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 2px #C9A84C,
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.merge-item.level-2 {
+  background: linear-gradient(145deg, #FFE4B5 0%, #DEB887 100%);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 3px #C9A84C,
+    0 0 8px rgba(201, 168, 76, 0.4),
+    inset 0 1px 3px rgba(255, 255, 255, 0.5);
+}
+
+.merge-item.level-3 {
+  background: linear-gradient(145deg, #FFD700 0%, #B8860B 100%);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    0 0 0 3px #8B2942,
+    0 0 16px rgba(255, 215, 0, 0.6),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  animation: item-glow 2s ease-in-out infinite;
+}
+
+@keyframes item-glow {
+  0%, 100% { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), 0 0 0 3px #8B2942, 0 0 16px rgba(255, 215, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.6); }
+  50% { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), 0 0 0 3px #8B2942, 0 0 24px rgba(255, 215, 0, 0.9), inset 0 2px 4px rgba(255, 255, 255, 0.6); }
+}
+
+/* Hover state */
+.merge-item:hover {
+  transform: scale(1.08);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 3px #C9A84C,
+    0 0 12px rgba(201, 168, 76, 0.5);
+}
+
+/* Active / dragging state */
+.merge-item:active,
+.merge-item.dragging {
+  cursor: grabbing;
+  transform: scale(1.15);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 4px #C9A84C,
+    0 0 20px rgba(201, 168, 76, 0.7);
+  z-index: 100;
+}
+
+/* Floating item (being dragged) */
+.merge-item.floating {
+  cursor: grabbing;
+  pointer-events: none;
+  z-index: 9999;
+  animation: none;
+}
+
+/* Emoji display */
+.item-emoji {
+  font-size: 32px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+}
+
+.level-1 .item-emoji { font-size: 28px; }
+.level-2 .item-emoji { font-size: 32px; }
+.level-3 .item-emoji { font-size: 36px; }
+
+/* Star for L3 items */
+.item-star {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 14px;
+  color: #FFD700;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+  animation: star-twinkle 1.5s ease-in-out infinite;
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+/* ==========================================
+   Merge Coin Effect
+   ========================================== */
+
+.merge-coin-effect {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD700;
+  text-shadow:
+    0 0 4px rgba(255, 215, 0, 0.8),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  animation: coin-fly-up 1s ease-out forwards;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+@keyframes coin-fly-up {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-40px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-60px) scale(0.8);
+  }
+}
+
+/* ==========================================
+   Merge Animation (when item appears)
+   ========================================== */
+
+.merge-item.new-merged {
+  animation: merge-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes merge-pop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ==========================================
+   Item type colors (subtle tints)
+   ========================================== */
+
+.merge-item.item-key { }
+.merge-item.item-photo { }
+.merge-item.item-crystal { }
+.merge-item.item-box { }
+.merge-item.item-badge { }
+.merge-item.item-document { }

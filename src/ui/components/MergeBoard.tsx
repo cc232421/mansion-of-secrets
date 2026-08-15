@@ -1,227 +1,242 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
-import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel } from '../../data/items';
-import { COLORS } from '../../game/config/boardConfig';
+import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem } from '../../data/items';
+import './MergeBoard.css';
 
-const CELL_SIZE = 80;
+// Constants
+const CELL_SIZE = 72;
 const CELL_GAP = 4;
+const CELL_TOTAL = CELL_SIZE + CELL_GAP; // 76
 const COLS = 6;
 const ROWS = 6;
 
-interface BoardItem {
+interface DragInfo {
+  itemId: string;
+  item: Item;
+  sourceCol: number;
+  sourceRow: number;
+  clientX: number;
+  clientY: number;
+}
+
+interface FloatItem {
   id: string;
   item: Item;
+  clientX: number;
+  clientY: number;
+}
+
+interface MergeEffect {
   col: number;
   row: number;
+  coins: number;
+  key: string;
 }
 
 export function MergeBoard() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const itemsRef = useRef<BoardItem[]>([]);
-  const dragRef = useRef<{ item: BoardItem; offsetX: number; offsetY: number } | null>(null);
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  const { addCoins } = useGameStore();
 
-  const { coins, addCoins, spendEnergy, energy } = useGameStore();
-
-  // Initialize board
-  useEffect(() => {
-    const initial: BoardItem[] = [];
+  // 2D grid: grid[row][col]
+  const [grid, setGrid] = useState<(Item | null)[][]>(() => {
+    const g: (Item | null)[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
     for (let i = 0; i < 8; i++) {
       const col = i % COLS;
       const row = Math.floor(i / COLS);
-      initial.push({ id: `init_${i}`, item: createRandomL1Item(), col, row });
+      g[row][col] = createRandomL1Item();
     }
-    itemsRef.current = initial;
-    forceUpdate();
+    return g;
+  });
+
+  // Currently floating item (being dragged)
+  const [floatItem, setFloatItem] = useState<FloatItem | null>(null);
+
+  // Highlight cell when hovering with drag
+  const [highlightCell, setHighlightCell] = useState<{ col: number; row: number } | null>(null);
+
+  // Merge effect animations
+  const [mergeEffects, setMergeEffects] = useState<MergeEffect[]>([]);
+
+  const boardRef = useRef<HTMLDivElement>(null);
+  const dragInfoRef = useRef<DragInfo | null>(null);
+
+  // Auto-spawn items
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGrid(prev => {
+        const empty: { col: number; row: number }[] = [];
+        for (let r = 0; r < ROWS; r++)
+          for (let c = 0; c < COLS; c++)
+            if (!prev[r][c]) empty.push({ col: c, row: r });
+        if (empty.length === 0) return prev;
+        const target = empty[Math.floor(Math.random() * empty.length)];
+        const newGrid = prev.map(r => [...r]);
+        newGrid[target.row][target.col] = createRandomL1Item();
+        return newGrid;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
-  const getCellCenter = useCallback((col: number, row: number) => {
-    const boardWidth = COLS * (CELL_SIZE + CELL_GAP);
-    const boardHeight = ROWS * (CELL_SIZE + CELL_GAP);
-    const offsetX = (window.innerWidth - boardWidth) / 2;
-    const offsetY = (window.innerHeight - boardHeight) / 2 + 60;
-    return {
-      x: offsetX + col * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2,
-      y: offsetY + row * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2,
-    };
-  }, []);
-
-  const getCellFromPos = useCallback((x: number, y: number) => {
-    const boardWidth = COLS * (CELL_SIZE + CELL_GAP);
-    const boardHeight = ROWS * (CELL_SIZE + CELL_GAP);
-    const offsetX = (window.innerWidth - boardWidth) / 2;
-    const offsetY = (window.innerHeight - boardHeight) / 2 + 60;
-    const col = Math.floor((x - offsetX) / (CELL_SIZE + CELL_GAP));
-    const row = Math.floor((y - offsetY) / (CELL_SIZE + CELL_GAP));
+  // Convert client coords → grid cell
+  const clientToGrid = useCallback((clientX: number, clientY: number) => {
+    const board = boardRef.current;
+    if (!board) return null;
+    const rect = board.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const relY = clientY - rect.top;
+    const col = Math.floor(relX / CELL_TOTAL);
+    const row = Math.floor(relY / CELL_TOTAL);
     if (col >= 0 && col < COLS && row >= 0 && row < ROWS) return { col, row };
     return null;
   }, []);
 
-  const findEmptyCell = useCallback(() => {
-    const occupied = new Set(itemsRef.current.map(i => `${i.col}-${i.row}`));
-    for (let row = 0; row < ROWS; row++) {
-      for (let col = 0; col < COLS; col++) {
-        if (!occupied.has(`${col}-${row}`)) return { col, row };
-      }
-    }
-    return null;
-  }, []);
+  // Pointer Down on item
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>, col: number, row: number) => {
+    const item = grid[row][col];
+    if (!item) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragInfoRef.current = {
+      itemId: item.id,
+      item,
+      sourceCol: col,
+      sourceRow: row,
+      clientX: e.clientX,
+      clientY: e.clientY,
+    };
+    setFloatItem({ id: item.id, item, clientX: e.clientX, clientY: e.clientY });
+    // Remove from grid immediately
+    setGrid(prev => {
+      const newGrid = prev.map(r => [...r]);
+      newGrid[row][col] = null;
+      return newGrid;
+    });
+  };
 
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
-    const { width, height } = canvas;
-
-    // Board background
-    const boardWidth = COLS * (CELL_SIZE + CELL_GAP);
-    const boardHeight = ROWS * (CELL_SIZE + CELL_GAP);
-    const offsetX = (width - boardWidth) / 2;
-    const offsetY = (height - boardHeight) / 2 + 60;
-
-    // Draw wood background
-    ctx.fillStyle = COLORS.wood;
-    ctx.beginPath();
-    ctx.roundRect(offsetX - 15, offsetY - 15, boardWidth + 30, boardHeight + 30, 12);
-    ctx.fill();
-
-    // Draw cells
-    for (let row = 0; row < ROWS; row++) {
-      for (let col = 0; col < COLS; col++) {
-        const x = offsetX + col * (CELL_SIZE + CELL_GAP);
-        const y = offsetY + row * (CELL_SIZE + CELL_GAP);
-        ctx.fillStyle = COLORS.boardCell;
-        ctx.beginPath();
-        ctx.roundRect(x + 2, y + 2, CELL_SIZE - CELL_GAP, CELL_SIZE - CELL_GAP, 8);
-        ctx.fill();
-      }
-    }
-
-    // Draw items
-    for (const boardItem of itemsRef.current) {
-      const { x, y } = getCellCenter(boardItem.col, boardItem.row);
-      const config = getItemConfig(boardItem.item);
-      const radius = 32;
-
-      // Glow
-      ctx.save();
-      ctx.shadowColor = config.glowColor;
-      ctx.shadowBlur = 15;
-      ctx.fillStyle = config.color;
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Border
-      ctx.strokeStyle = COLORS.gold;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // Emoji
-      ctx.font = `${boardItem.item.level === 3 ? 36 : boardItem.item.level === 2 ? 30 : 24}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(config.emoji, x, y);
-
-      // Star for L3
-      if (boardItem.item.level === 3) {
-        ctx.fillStyle = COLORS.gold;
-        ctx.font = '14px serif';
-        ctx.fillText('★', x + radius - 8, y - radius + 8);
-      }
-    }
-  }, [getCellCenter]);
-
+  // Global pointer move (for floating item)
   useEffect(() => {
-    draw();
-  });
+    if (!floatItem) return;
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const handleMove = (e: PointerEvent) => {
+      setFloatItem(prev => prev ? { ...prev, clientX: e.clientX, clientY: e.clientY } : null);
+      const pos = clientToGrid(e.clientX, e.clientY);
+      setHighlightCell(pos);
+    };
 
-    const handleMouseDown = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    const handleUp = (e: PointerEvent) => {
+      if (!dragInfoRef.current) return;
+      const pos = clientToGrid(e.clientX, e.clientY);
 
-      // Find clicked item
-      for (let i = itemsRef.current.length - 1; i >= 0; i--) {
-        const boardItem = itemsRef.current[i];
-        const { x: cx, y: cy } = getCellCenter(boardItem.col, boardItem.row);
-        const dist = Math.hypot(x - cx, y - cy);
-        if (dist < 35) {
-          dragRef.current = { item: boardItem, offsetX: x - cx, offsetY: y - cy };
-          break;
+      if (pos) {
+        const targetItem = grid[pos.row][pos.col];
+
+        if (targetItem && canMerge(floatItem!.item, targetItem)) {
+          // ✅ MERGE
+          const newLevel = (floatItem!.item.level + 1) as ItemLevel;
+          const reward = newLevel === 2 ? 50 : 150;
+
+          setGrid(prev => {
+            const newGrid = prev.map(r => [...r]);
+            newGrid[pos.row][pos.col] = createItem(newLevel, floatItem!.item.type);
+            return newGrid;
+          });
+
+          setMergeEffects(prev => [...prev, { col: pos.col, row: pos.row, coins: reward, key: `merge_${Date.now()}` }]);
+          setTimeout(() => setMergeEffects(prev => prev.slice(1)), 1000);
+          addCoins(reward);
+        } else if (!targetItem) {
+          // ✅ MOVE to empty
+          setGrid(prev => {
+            const newGrid = prev.map(r => [...r]);
+            newGrid[pos.row][pos.col] = floatItem!.item;
+            return newGrid;
+          });
+        } else {
+          // ❌ Return to source
+          setGrid(prev => {
+            const newGrid = prev.map(r => [...r]);
+            newGrid[dragInfoRef.current!.sourceRow][dragInfoRef.current!.sourceCol] = floatItem!.item;
+            return newGrid;
+          });
         }
-      }
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!dragRef.current) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const { col, row } = getCellFromPos(x - dragRef.current.offsetX, y - dragRef.current.offsetY) || {};
-      if (col !== undefined && row !== undefined) {
-        dragRef.current.item.col = col;
-        dragRef.current.item.row = row;
-        draw();
-      }
-    };
-
-    const handleMouseUp = (e: MouseEvent) => {
-      if (!dragRef.current) return;
-      const { item } = dragRef.current;
-      dragRef.current = null;
-
-      // Check for merge
-      const target = itemsRef.current.find(
-        other =>
-          other.id !== item.id &&
-          other.col === item.col &&
-          other.row === item.row &&
-          canMerge(item.item, other.item)
-      );
-
-      if (target) {
-        // Merge!
-        const newLevel = (item.item.level + 1) as ItemLevel;
-        const reward = newLevel === 2 ? 50 : 150;
-        addCoins(reward);
-
-        // Remove both, create new merged item
-        itemsRef.current = itemsRef.current.filter(i => i.id !== item.id && i.id !== target.id);
-        itemsRef.current.push({
-          id: `merged_${Date.now()}`,
-          item: { ...item.item, level: newLevel, id: `item_${Date.now()}` },
-          col: item.col,
-          row: item.row,
+      } else {
+        // Dropped outside — return to source
+        setGrid(prev => {
+          const newGrid = prev.map(r => [...r]);
+          newGrid[dragInfoRef.current!.sourceRow][dragInfoRef.current!.sourceCol] = floatItem!.item;
+          return newGrid;
         });
-
-        forceUpdate();
-        draw();
       }
+
+      dragInfoRef.current = null;
+      setFloatItem(null);
+      setHighlightCell(null);
     };
 
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
     };
-  }, [draw, getCellCenter, getCellFromPos, addCoins]);
+  }, [floatItem, grid, clientToGrid, addCoins]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
-      style={{ display: 'block', cursor: dragRef.current ? 'grabbing' : 'grab' }}
-    />
+    <div className="merge-board-wrapper">
+      {/* Floating dragged item */}
+      {floatItem && (
+        <div
+          className="merge-item floating"
+          style={{
+            position: 'fixed',
+            left: floatItem.clientX - 36,
+            top: floatItem.clientY - 36,
+            zIndex: 9999,
+            pointerEvents: 'none',
+          }}
+        >
+          <span className="item-emoji">{getItemConfig(floatItem.item).emoji}</span>
+        </div>
+      )}
+
+      {/* The board grid */}
+      <div
+        ref={boardRef}
+        className="merge-board"
+        style={{
+          gridTemplateColumns: `repeat(${COLS}, ${CELL_SIZE}px)`,
+          gridTemplateRows: `repeat(${ROWS}, ${CELL_SIZE}px)`,
+          gap: `${CELL_GAP}px`,
+        }}
+      >
+        {grid.map((row, rowIdx) =>
+          row.map((item, colIdx) => {
+            const isHighlight = highlightCell?.col === colIdx && highlightCell?.row === rowIdx;
+            const effect = mergeEffects.find(e => e.col === colIdx && e.row === rowIdx);
+            return (
+              <div
+                key={`${colIdx}-${rowIdx}`}
+                className={`merge-cell ${isHighlight ? 'merge-cell-highlight' : ''}`}
+                style={{ width: CELL_SIZE, height: CELL_SIZE }}
+              >
+                {item && (
+                  <div
+                    className={`merge-item level-${item.level}`}
+                    onPointerDown={(e) => handlePointerDown(e, colIdx, rowIdx)}
+                  >
+                    <span className="item-emoji">{getItemConfig(item).emoji}</span>
+                    {item.level === 3 && <span className="item-star">★</span>}
+                  </div>
+                )}
+                {effect && (
+                  <div className="merge-coin-effect" key={effect.key}>
+                    +{effect.coins}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }

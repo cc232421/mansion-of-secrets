@@ -68,6 +68,8 @@ export function getItemConfig(item: Item): MergeItemConfig {
 }
 
 // Check if two items can merge
-export function canMerge(a: Item, b: Item): boolean {
-  return a.level === b.level && a.level < 3 && a.type === b.type;
+export function canMerge(a: Item | null | undefined, b: Item | null | undefined): boolean {
+  if (!a || !b) return false;
+  if (a.level >= 3 || b.level >= 3) return false;
+  return a.type === b.type && a.level === b.level;
 }
