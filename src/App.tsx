@@ -122,7 +122,7 @@ function MobileLayout({
     <>
       <div
         style={{
-          height: 'calc(100vh - 60px - 60px)',
+          height: 'calc(100vh - 52px - 60px)',
           padding: 8,
         }}
       >

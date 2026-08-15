@@ -32,7 +32,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          padding: '16px 32px',
+          padding: '12px 16px',
           position: 'sticky',
           top: 0,
           zIndex: 100,
