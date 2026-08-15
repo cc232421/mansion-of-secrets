@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem, MERGE_ITEMS } from '../../data/items';
+import { Sound } from '../../services/soundService';
 import './MergeBoard.css';
 
 // Board constants
@@ -55,6 +56,7 @@ export function MergeBoard() {
       if (emptyIndices.length === 0) return;
       const idx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
       setBoardItems([{ index: idx, item: createRandomL1Item() }]);
+      Sound.spawn();
     }, 3000);
     return () => clearInterval(interval);
   }, [board, setBoardItems]);
@@ -83,6 +85,7 @@ export function MergeBoard() {
     setMouseX(e.clientX);
     setMouseY(e.clientY);
     setDrag({ item, sourceIndex: index, currentCol: col, currentRow: row });
+    Sound.pickup();
   };
 
   // ─── Pointer Move ───────────────────────────────────────────────
@@ -128,13 +131,21 @@ export function MergeBoard() {
           setMergeEffects(prev => [...prev, { col: pos.col, row: pos.row, coins: reward, key: `m_${Date.now()}` }]);
           setTimeout(() => setMergeEffects(prev => prev.slice(1)), 1000);
           addCoins(reward);
+
+          // Play merge sound — L4 gets legendary treatment
+          if (newLevel === 4) {
+            Sound.legendaryMerge();
+          } else {
+            Sound.merge(newLevel);
+          }
         } else if (!targetItem && targetIndex !== drag.sourceIndex) {
-          // ✅ MOVE
+          // ✅ MOVE — soft drop sound
           const updates: { index: number; item: Item | null }[] = [
             { index: drag.sourceIndex, item: null },
             { index: targetIndex, item: drag.item },
           ];
           setBoardItems(updates);
+          Sound.drop();
         }
       }
       // Dropped outside → item stays at source

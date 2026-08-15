@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { Sound } from '../../services/soundService';
 
 const MAX_ENERGY = 120;
 
 export function TopBar() {
   const { coins, calculateCurrentEnergy } = useGameStore();
   const currentEnergy = calculateCurrentEnergy();
+  const [muted, setMuted] = useState(false);
+
+  const toggleMute = () => {
+    if (muted) {
+      Sound.setMasterVolume(0.7);
+    } else {
+      Sound.setMasterVolume(0);
+    }
+    setMuted(!muted);
+    Sound.click();
+  };
 
   return (
     <div
@@ -93,7 +105,7 @@ export function TopBar() {
         </span>
       </div>
 
-      {/* Settings */}
+      {/* Sound toggle */}
       <button
         style={{
           background: 'transparent',
@@ -102,9 +114,10 @@ export function TopBar() {
           cursor: 'pointer',
           padding: 8,
         }}
-        title="Settings"
+        onClick={toggleMute}
+        title={muted ? 'Unmute' : 'Mute'}
       >
-        ⚙️
+        {muted ? '🔇' : '🔊'}
       </button>
     </div>
   );

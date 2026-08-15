@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from './stores/gameStore';
 import { saveGame } from './services/saveService';
+import { Sound } from './services/soundService';
 import { TopBar } from './ui/components/TopBar';
 import { MergeBoard } from './ui/components/MergeBoard';
 import { OrdersPanel } from './ui/components/OrdersPanel';
@@ -82,13 +83,13 @@ function App() {
           >
             <button
               className={`btn-primary ${activeView === 'merge' ? '' : 'opacity-60'}`}
-              onClick={() => setActiveView('merge')}
+              onClick={() => { setActiveView('merge'); Sound.click(); }}
             >
               🧩 Merge Board
             </button>
             <button
               className={`btn-primary ${activeView === 'rooms' ? '' : 'opacity-60'}`}
-              onClick={() => setActiveView('rooms')}
+              onClick={() => { setActiveView('rooms'); Sound.click(); }}
             >
               🏠 Rooms
             </button>
@@ -117,8 +118,8 @@ function App() {
             </div>
           </div>
           <button
-            className="btn-gold"
-            onClick={() => setShowCutscene(true)}
+            className={`btn-gold`}
+            onClick={() => { setShowCutscene(true); Sound.click(); }}
           >
             Continue Story
           </button>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { getItemConfig } from '../../data/items';
+import { Sound } from '../../services/soundService';
 
 export function OrdersPanel() {
   const { orders, board, energy, fulfillOrder, coins, buyEnergy } = useGameStore();
@@ -38,17 +39,26 @@ export function OrdersPanel() {
     const result = fulfillOrder(orderId);
     if (result.success) {
       setMessage('✅ Order completed!');
+      Sound.orderComplete();
+      Sound.coin();
+      // Show evidence drop message if applicable
+      if (result.message && result.message.includes('Evidence')) {
+        setTimeout(() => setMessage(result.message || '✅'), 2200);
+      }
     } else {
       setMessage(`❌ ${result.message}`);
+      Sound.error();
     }
-    setTimeout(() => setMessage(null), 2000);
+    setTimeout(() => setMessage(null), result.success ? 2000 : 2000);
   };
 
   const handleBuyEnergy = () => {
     if (buyEnergy()) {
       setMessage('⚡ +30 Energy restored!');
+      Sound.coin();
     } else {
       setMessage('❌ Not enough coins or already full');
+      Sound.error();
     }
     setTimeout(() => setMessage(null), 2000);
   };
