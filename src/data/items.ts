@@ -73,3 +73,8 @@ export function canMerge(a: Item | null | undefined, b: Item | null | undefined)
   if (a.level >= 3 || b.level >= 3) return false;
   return a.type === b.type && a.level === b.level;
 }
+
+// Overload for grid access (Item | null)
+export function canMergeItems(a: Item | null, b: Item | null): boolean {
+  return canMerge(a, b);
+}

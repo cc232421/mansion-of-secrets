@@ -48,7 +48,7 @@ function App() {
         </div>
 
         {/* Center - Game area */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative" style={{ minHeight: '520px' }}>
           {activeView === 'merge' ? (
             <MergeBoard />
           ) : (
