@@ -221,6 +221,9 @@ export function MergeBoard() {
           height: totalBoardH,
           padding: BOARD_PADDING,
           gap: `${CELL_GAP}px`,
+          gridTemplateColumns: `repeat(${COLS}, ${cellSize}px)`,
+          gridTemplateRows: `repeat(${ROWS}, ${cellSize}px)`,
+          display: 'grid',
         }}
       >
         {board.map((item, index) => {
