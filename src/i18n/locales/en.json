@@ -1,0 +1,81 @@
+{
+  "common": {
+    "startGame": "Start Game",
+    "continueGame": "Continue",
+    "newGame": "New Game",
+    "sound": "Sound",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "energy": "Energy",
+    "coins": "Coins",
+    "chapter": "Chapter",
+    "loading": "Loading...",
+    "play": "Play"
+  },
+  "landing": {
+    "heroTitle": "Mansion of Secrets",
+    "heroSubtitle": "A Merge Puzzle Mystery",
+    "tagline": "Uncover family secrets. Solve merge puzzles. Restore the mansion.",
+
+    "storyTitle": "📖 The Story",
+    "storyIntro": "Emily Harper returns home to discover her husband's betrayal — and a family mystery spanning three generations.",
+    "storyDetail": "A dying patriarch. A forbidden affair. A mansion hiding the truth about her grandmother's death. As Emily searches the old house, she uncovers clues that point to something far darker than a simple accident. What really happened in 1980? And who is willing to kill to keep it buried?",
+    "storyCTA": "Solve the mystery →",
+
+    "gameplayTitle": "🎮 How to Play",
+    "gameplayStep1Title": "Drag & Merge",
+    "gameplayStep1Desc": "Drag items onto matching items to merge them. Two L1 items become L2, two L2 become L3, and two L3 become legendary L4.",
+    "gameplayStep2Title": "Complete Orders",
+    "gameplayStep2Desc": "Fulfill customer orders to earn coins. Each order requires specific items at specific levels.",
+    "gameplayStep3Title": "Collect Evidence",
+    "gameplayStep3Desc": "Complete L4 orders to find evidence fragments. 3 fragments unlock a room and reveal the next chapter.",
+    "gameplayStep4Title": "Uncover Secrets",
+    "gameplayStep4Desc": "Each room unlocked reveals a family secret. Follow the story to find out what really happened.",
+
+    "languageSelect": "Language",
+    "startButton": "🧩 Start Playing Now"
+  },
+  "menu": {
+    "mergeBoard": "Merge Board",
+    "rooms": "Rooms",
+    "continueStory": "Continue Story",
+    "outOfEnergy": "Out of Energy!",
+    "buyMore": "Buy more in Orders panel"
+  },
+  "orders": {
+    "title": "Orders",
+    "complete": "Complete Order",
+    "locked": "Locked",
+    "completed": "Completed",
+    "notEnoughItems": "Not enough items",
+    "notEnoughEnergy": "Not enough energy",
+    "orderComplete": "Order completed!",
+    "evidenceDrop": "✨ Evidence found!",
+    "buyEnergy": "Buy Energy",
+    "buyEnergyCost": "100 🪙 → +30 ⚡",
+    "refreshOrders": "Refresh",
+    "energyCost": "⚡ cost"
+  },
+  "story": {
+    "title": "Family Secrets",
+    "progress": "Story Progress",
+    "chapterLabel": "Chapter {{n}}",
+    "locked": "Locked",
+    "unlocked": "Unlocked",
+    "evidenceCollected": "Evidence: {{current}}/{{total}}",
+    "teaserUnlock": "Teaser Unlocked!",
+    "roomUnlocked": "Room Unlocked!",
+    "chapterComplete": "Chapter Complete!"
+  },
+  "rooms": {
+    "title": "The Mansion",
+    "locked": "🔒 Explore to unlock",
+    "renovated": "✨ Renovated",
+    "evidenceNeeded": "{{count}} more evidence needed"
+  },
+  "gameover": {
+    "title": "Game Over",
+    "subtitle": "The mansion has been restored, but some secrets remain buried...",
+    "restart": "Play Again"
+  }
+}

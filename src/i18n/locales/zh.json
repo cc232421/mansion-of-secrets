@@ -1,0 +1,81 @@
+{
+  "common": {
+    "startGame": "开始游戏",
+    "continueGame": "继续",
+    "newGame": "新游戏",
+    "sound": "音效",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "energy": "能量",
+    "coins": "金币",
+    "chapter": "章节",
+    "loading": "加载中...",
+    "play": "开始"
+  },
+  "landing": {
+    "heroTitle": "秘密豪宅",
+    "heroSubtitle": "合成推理神秘游戏",
+    "tagline": "揭开家族秘密，解决合成谜题，修复神秘豪宅。",
+
+    "storyTitle": "📖 故事简介",
+    "storyIntro": "Emily Harper 回家发现丈夫背叛了她，更发现了跨越三代的家族秘密。",
+    "storyDetail": "一位垂死的父亲。一段禁忌的婚外情。一座隐藏着祖母死亡真相的豪宅。当 Emily 搜索这座老宅时，她发现了指向更黑暗真相的线索。1980年究竟发生了什么？谁又愿意为此杀人灭口？",
+    "storyCTA": "解开谜团 →",
+
+    "gameplayTitle": "🎮 玩法说明",
+    "gameplayStep1Title": "拖拽合成",
+    "gameplayStep1Desc": "将物品拖到相同物品上合成。两件L1物品合成L2，两件L2合成L3，两件L3合成传奇L4。",
+    "gameplayStep2Title": "完成订单",
+    "gameplayStep2Desc": "完成客户订单赚取金币。每个订单需要特定等级和类型的物品。",
+    "gameplayStep3Title": "收集证据",
+    "gameplayStep3Desc": "完成L4订单有几率掉落证据碎片。收集3个碎片解锁一个房间，揭示下一章剧情。",
+    "gameplayStep4Title": "揭开秘密",
+    "gameplayStep4Desc": "每个解锁的房间都会揭示一个家族秘密。跟随剧情发掘真相。",
+
+    "languageSelect": "语言",
+    "startButton": "🧩 立即开始游戏"
+  },
+  "menu": {
+    "mergeBoard": "合成棋盘",
+    "rooms": "房间",
+    "continueStory": "继续剧情",
+    "outOfEnergy": "能量耗尽！",
+    "buyMore": "在订单面板购买"
+  },
+  "orders": {
+    "title": "订单",
+    "complete": "完成订单",
+    "locked": "未解锁",
+    "completed": "已完成",
+    "notEnoughItems": "物品不足",
+    "notEnoughEnergy": "能量不足",
+    "orderComplete": "订单完成！",
+    "evidenceDrop": "✨ 获得证据！",
+    "buyEnergy": "购买能量",
+    "buyEnergyCost": "100 🪙 → +30 ⚡",
+    "refreshOrders": "刷新订单",
+    "energyCost": "⚡ 消耗"
+  },
+  "story": {
+    "title": "家族秘密",
+    "progress": "剧情进度",
+    "chapterLabel": "第 {{n}} 章",
+    "locked": "未解锁",
+    "unlocked": "已解锁",
+    "evidenceCollected": "证据: {{current}}/{{total}}",
+    "teaserUnlock": "预告解锁！",
+    "roomUnlocked": "房间解锁！",
+    "chapterComplete": "章节完成！"
+  },
+  "rooms": {
+    "title": "豪宅",
+    "locked": "🔒 探索以解锁",
+    "renovated": "✨ 已装修",
+    "evidenceNeeded": "还需 {{count}} 个证据"
+  },
+  "gameover": {
+    "title": "游戏结束",
+    "subtitle": "豪宅已修复，但有些秘密永远埋藏...",
+    "restart": "重新开始"
+  }
+}

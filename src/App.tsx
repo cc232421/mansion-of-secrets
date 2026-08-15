@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from './stores/gameStore';
 import { saveGame } from './services/saveService';
 import { Sound } from './services/soundService';
+import { LandingPage } from './ui/components/LandingPage';
 import { TopBar } from './ui/components/TopBar';
 import { MergeBoard } from './ui/components/MergeBoard';
 import { OrdersPanel } from './ui/components/OrdersPanel';
@@ -13,12 +15,15 @@ import { startEnergyTimer } from './stores/gameStore';
 function App() {
   const [showCutscene, setShowCutscene] = useState(false);
   const [activeView, setActiveView] = useState<'merge' | 'rooms'>('merge');
+  const [gameStarted, setGameStarted] = useState(false);
   const { storyProgress, currentChapter } = useGameStore();
 
   // Start energy auto-regen timer
   useEffect(() => {
     startEnergyTimer();
   }, []);
+
+  // Auto-save every 30 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       const state = useGameStore.getState();
@@ -40,6 +45,10 @@ function App() {
   }, [storyProgress]);
 
   const currentChapterData = CHAPTERS[currentChapter - 1]?.[0];
+
+  if (!gameStarted) {
+    return <LandingPage onStart={() => setGameStarted(true)} />;
+  }
 
   return (
     <div className="w-full h-full relative" style={{ background: '#1a0f0a' }}>
@@ -118,7 +127,7 @@ function App() {
             </div>
           </div>
           <button
-            className={`btn-gold`}
+            className="btn-gold"
             onClick={() => { setShowCutscene(true); Sound.click(); }}
           >
             Continue Story
