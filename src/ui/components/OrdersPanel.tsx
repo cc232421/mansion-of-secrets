@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../stores/gameStore';
-import { getItemConfig } from '../../data/items';
 import { Sound } from '../../services/soundService';
 
 export function OrdersPanel() {
-  const { orders, board, energy, fulfillOrder, coins, buyEnergy } = useGameStore();
+  const { t } = useTranslation();
+  const { orders, board, fulfillOrder, coins, buyEnergy } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
   const [message, setMessage] = useState<string | null>(null);
 
-  // 如果没有订单，随机生成
   const displayOrders = orders.length > 0 ? orders : [];
 
-  // 计算当前棋盘物品统计
+  // Calculate current board inventory
   const getBoardInventory = () => {
     const inv: Record<string, number> = {};
     for (const item of board) {
@@ -38,26 +38,25 @@ export function OrdersPanel() {
   const handleFulfill = (orderId: string) => {
     const result = fulfillOrder(orderId);
     if (result.success) {
-      setMessage('✅ Order completed!');
+      setMessage(t('orders.orderComplete'));
       Sound.orderComplete();
       Sound.coin();
-      // Show evidence drop message if applicable
       if (result.message && result.message.includes('Evidence')) {
-        setTimeout(() => setMessage(result.message || '✅'), 2200);
+        setTimeout(() => setMessage(result.message || t('orders.orderComplete')), 2200);
       }
     } else {
       setMessage(`❌ ${result.message}`);
       Sound.error();
     }
-    setTimeout(() => setMessage(null), result.success ? 2000 : 2000);
+    setTimeout(() => setMessage(null), 2000);
   };
 
   const handleBuyEnergy = () => {
     if (buyEnergy()) {
-      setMessage('⚡ +30 Energy restored!');
+      setMessage(t('buySuccess') || '⚡ +30 Energy restored!');
       Sound.coin();
     } else {
-      setMessage('❌ Not enough coins or already full');
+      setMessage(t('orders.notEnoughCoins') || '❌ Not enough coins or already full');
       Sound.error();
     }
     setTimeout(() => setMessage(null), 2000);
@@ -66,7 +65,7 @@ export function OrdersPanel() {
   return (
     <div className="h-full flex flex-col">
       <h2 className="font-display text-xl text-[#C9A84C] mb-3 flex items-center gap-2" style={{ fontFamily: 'Georgia, serif' }}>
-        📋 Orders
+        📋 {t('orders.title')}
       </h2>
 
       {/* Message toast */}
@@ -79,7 +78,7 @@ export function OrdersPanel() {
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {displayOrders.length === 0 ? (
           <div className="text-[#FFF8F0]/40 text-sm text-center py-4">
-            No active orders. Play to unlock!
+            {t('orders.noOrders') || 'No active orders. Play to unlock!'}
           </div>
         ) : (
           displayOrders.map((order) => {
@@ -143,12 +142,12 @@ export function OrdersPanel() {
                     onClick={() => handleFulfill(order.id)}
                     disabled={!canDo}
                   >
-                    {canDo ? '✅ Complete Order' : '🔒 Locked'}
+                    {canDo ? `✅ ${t('orders.complete')}` : `🔒 ${t('orders.locked')}`}
                   </button>
                 )}
                 {order.completed && (
                   <div className="w-full mt-2 py-1.5 rounded text-sm text-center text-[#81C784]">
-                    ✓ Completed
+                    ✓ {t('orders.completed')}
                   </div>
                 )}
               </div>
@@ -173,7 +172,7 @@ export function OrdersPanel() {
           onClick={handleBuyEnergy}
           disabled={coins < 100 || currentEnergy >= 120}
         >
-          ⚡ Buy Energy (100 🪙 → +30 ⚡)
+          {t('orders.buyEnergy')} ({t('orders.buyEnergyCost')})
         </button>
       </div>
     </div>

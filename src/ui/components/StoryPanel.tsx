@@ -1,9 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../stores/gameStore';
 import { CHAPTERS } from '../../data/chapters';
 
 export function StoryPanel() {
-  const { storyProgress, currentChapter, seenCutscenes } = useGameStore();
+  const { t } = useTranslation();
+  const { storyProgress, currentChapter, seenCutscenes, evidence } = useGameStore();
 
   const currentChapterData = CHAPTERS[currentChapter - 1]?.[0];
   const currentChapterObj = { title: currentChapterData?.title || 'Chapter 1' };
@@ -51,17 +53,18 @@ export function StoryPanel() {
       {/* Evidence collected */}
       <div className="flex-1">
         <p className="text-xs text-[#FFF8F0]/40 uppercase tracking-wider mb-2">
-          Evidence ({seenCutscenes.length} collected)
+          {t('story.evidenceCollected', { current: evidence.length, total: 3 })}
         </p>
         <div className="grid grid-cols-3 gap-2">
-          {seenCutscenes.length > 0 ? (
-            seenCutscenes.map(id => (
+          {evidence.length > 0 ? (
+            evidence.filter(e => e.obtained).slice(0, 6).map(ev => (
               <div
-                key={id}
+                key={ev.id}
                 className="aspect-square rounded flex items-center justify-center text-2xl"
                 style={{ background: 'rgba(139,41,66,0.3)', border: '1px solid #8B2942' }}
+                title={`${ev.type} evidence`}
               >
-                📎
+                {ev.type === 'key' ? '🗝️' : ev.type === 'photo' ? '🖼️' : '🔮'}
               </div>
             ))
           ) : (

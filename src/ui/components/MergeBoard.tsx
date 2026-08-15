@@ -26,7 +26,7 @@ interface MergeEffect {
 }
 
 export function MergeBoard() {
-  const { board, setBoardItems, addCoins, energy } = useGameStore();
+  const { board, setBoardItems, addCoins } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
 
   // Current drag state
