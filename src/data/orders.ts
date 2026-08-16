@@ -32,25 +32,25 @@ export interface OrderTemplate {
 export const ORDER_TEMPLATES: OrderTemplate[] = [
   // ── L1 Orders (easy) ───────────────────────────────────────────
   {
-    description: 'Restore the family portrait',
+    description: '修复全家福照片',
     requirements: [{ level: 1, type: 'photo', count: 3 }],
     rewardCoins: 80,
     energyCost: 5,
   },
   {
-    description: 'Find the golden key',
+    description: '找到金钥匙',
     requirements: [{ level: 1, type: 'key', count: 3 }],
     rewardCoins: 80,
     energyCost: 5,
   },
   {
-    description: 'Gather crystal fragments',
+    description: '收集水晶碎片',
     requirements: [{ level: 1, type: 'crystal', count: 3 }],
     rewardCoins: 80,
     energyCost: 5,
   },
   {
-    description: 'Assemble the family album',
+    description: '整理家庭相册',
     requirements: [
       { level: 1, type: 'photo', count: 2 },
       { level: 1, type: 'key', count: 2 },
@@ -60,57 +60,57 @@ export const ORDER_TEMPLATES: OrderTemplate[] = [
   },
   // ── L2 Orders (medium) ─────────────────────────────────────────
   {
-    description: 'Craft the master key',
+    description: '制作万能钥匙',
     requirements: [{ level: 2, type: 'key', count: 2 }],
     rewardCoins: 200,
     energyCost: 15,
   },
   {
-    description: 'Restore the heirloom photo',
+    description: '修复传家照片',
     requirements: [{ level: 2, type: 'photo', count: 2 }],
     rewardCoins: 200,
     energyCost: 15,
   },
   {
-    description: 'Charge the crystal orb',
+    description: '为水晶球充能',
     requirements: [{ level: 2, type: 'crystal', count: 2 }],
     rewardCoins: 200,
     energyCost: 15,
   },
   // ── L3 Orders (hard) ───────────────────────────────────────────
   {
-    description: 'Unlock the mystery',
+    description: '解开谜团',
     requirements: [{ level: 3, type: 'key', count: 1 }],
     rewardCoins: 500,
     energyCost: 30,
   },
   {
-    description: 'Reveal the truth',
+    description: '揭示真相',
     requirements: [{ level: 3, type: 'photo', count: 1 }],
     rewardCoins: 500,
     energyCost: 30,
   },
   {
-    description: 'Discover the crystal crown',
+    description: '发现水晶王冠',
     requirements: [{ level: 3, type: 'crystal', count: 1 }],
     rewardCoins: 500,
     energyCost: 30,
   },
   // ── L4 Orders (legendary) ─────────────────────────────────────
   {
-    description: 'The Royal Crown Collection',
+    description: '皇家王冠收藏',
     requirements: [{ level: 4, type: 'key', count: 1 }],
     rewardCoins: 1000,
     energyCost: 40,
   },
   {
-    description: 'Album of Lost Memories',
+    description: '失落的记忆相册',
     requirements: [{ level: 4, type: 'photo', count: 1 }],
     rewardCoins: 1000,
     energyCost: 40,
   },
   {
-    description: 'Diamond Treasury',
+    description: '钻石宝库',
     requirements: [{ level: 4, type: 'crystal', count: 1 }],
     rewardCoins: 1000,
     energyCost: 40,

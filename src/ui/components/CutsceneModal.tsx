@@ -69,13 +69,13 @@ export function CutsceneModal({ onClose }: CutsceneModalProps) {
         {/* Chapter title */}
         <div className="text-center mb-8">
           <p className="text-[#C9A84C] text-sm tracking-widest uppercase mb-2">
-            Chapter {chapter.chapter}
+            第{chapter.chapter}章
           </p>
           <h2
             className="font-display text-3xl text-[#FFF8F0]"
             style={{ fontFamily: 'Georgia, serif' }}
           >
-            {chapter.title}
+            {(chapter as any).titleZh || chapter.title}
           </h2>
         </div>
 

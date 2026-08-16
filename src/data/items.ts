@@ -20,25 +20,25 @@ export interface MergeItemConfig {
 
 export const MERGE_ITEMS: Record<ItemLevel, MergeItemConfig[]> = {
   1: [
-    { type: 'key', displayName: 'Old Key', emoji: '🗝️', color: '#CD7F32', glowColor: '#B87333', mergeReward: 50 },
-    { type: 'photo', displayName: 'Broken Photo', emoji: '🖼️', color: '#8B4513', glowColor: '#654321', mergeReward: 50 },
-    { type: 'crystal', displayName: 'Cracked Crystal', emoji: '🔮', color: '#87CEEB', glowColor: '#4682B4', mergeReward: 50 },
+    { type: 'key', displayName: '旧钥匙', emoji: '🗝️', color: '#CD7F32', glowColor: '#B87333', mergeReward: 50 },
+    { type: 'photo', displayName: '破碎照片', emoji: '🖼️', color: '#8B4513', glowColor: '#654321', mergeReward: 50 },
+    { type: 'crystal', displayName: '裂纹水晶', emoji: '🔮', color: '#87CEEB', glowColor: '#4682B4', mergeReward: 50 },
   ],
   2: [
-    { type: 'key', displayName: 'Golden Key', emoji: '🔑', color: '#FFD700', glowColor: '#FFA500', mergeReward: 150 },
-    { type: 'photo', displayName: 'Restored Photo', emoji: '🖼️', color: '#DAA520', glowColor: '#B8860B', mergeReward: 150 },
-    { type: 'crystal', displayName: 'Crystal Ball', emoji: '🔮', color: '#4169E1', glowColor: '#6495ED', mergeReward: 150 },
+    { type: 'key', displayName: '金钥匙', emoji: '🔑', color: '#FFD700', glowColor: '#FFA500', mergeReward: 150 },
+    { type: 'photo', displayName: '修复照片', emoji: '🖼️', color: '#DAA520', glowColor: '#B8860B', mergeReward: 150 },
+    { type: 'crystal', displayName: '水晶球', emoji: '🔮', color: '#4169E1', glowColor: '#6495ED', mergeReward: 150 },
   ],
   3: [
     // L3 items share same type as L2 (key→key, photo→photo, crystal→crystal) for upgrade continuity
-    { type: 'key', displayName: 'Master Key', emoji: '🗝️', color: '#B8860B', glowColor: '#FFD700', mergeReward: 300 },
-    { type: 'photo', displayName: 'Family Portrait', emoji: '🖼️', color: '#8B0000', glowColor: '#B22222', mergeReward: 300 },
-    { type: 'crystal', displayName: 'Crystal Crown', emoji: '💎', color: '#4169E1', glowColor: '#00BFFF', mergeReward: 300 },
+    { type: 'key', displayName: '万能钥匙', emoji: '🗝️', color: '#B8860B', glowColor: '#FFD700', mergeReward: 300 },
+    { type: 'photo', displayName: '全家福照片', emoji: '🖼️', color: '#8B0000', glowColor: '#B22222', mergeReward: 300 },
+    { type: 'crystal', displayName: '水晶王冠', emoji: '💎', color: '#4169E1', glowColor: '#00BFFF', mergeReward: 300 },
   ],
   4: [
-    { type: 'key', displayName: 'Royal Crown', emoji: '👑', color: '#FFD700', glowColor: '#FFA500', mergeReward: 500 },
-    { type: 'photo', displayName: 'Album of Memories', emoji: '📒', color: '#8B4513', glowColor: '#CD853F', mergeReward: 500 },
-    { type: 'crystal', displayName: 'Diamond Collection', emoji: '💠', color: '#E0FFFF', glowColor: '#AFEEEE', mergeReward: 500 },
+    { type: 'key', displayName: '皇家王冠', emoji: '👑', color: '#FFD700', glowColor: '#FFA500', mergeReward: 500 },
+    { type: 'photo', displayName: '珍藏相册', emoji: '📒', color: '#8B4513', glowColor: '#CD853F', mergeReward: 500 },
+    { type: 'crystal', displayName: '钻石收藏', emoji: '💠', color: '#E0FFFF', glowColor: '#AFEEEE', mergeReward: 500 },
   ],
 };
 

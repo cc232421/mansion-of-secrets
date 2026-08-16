@@ -66,14 +66,14 @@ const INITIAL_BOARD_SIZE = 8;
 // ─── Room definitions ────────────────────────────────────────────────────────
 
 const INITIAL_ROOMS: Room[] = [
-  { id: 'study',      name: 'Study',           description: 'Father\'s last secret awaits...',     requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_study',      chapter: 1, icon: '📚' },
-  { id: 'gallery',    name: 'Gallery',         description: 'A portrait with eyes that follow...', requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_gallery',    chapter: 1, icon: '🖼️' },
-  { id: 'wine_cellar',name: 'Wine Cellar',     description: 'Footsteps in the basement...',        requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_cellar',     chapter: 2, icon: '🍷' },
-  { id: 'accounting', name: 'Accounting Room', description: 'A forged signature...',              requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_accounting', chapter: 2, icon: '💰' },
-  { id: 'grandma',    name: 'Grandma Room',    description: 'Grandma knew everything...',         requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_grandma',    chapter: 3, icon: '👵' },
-  { id: 'secret',     name: 'Secret Chamber',  description: 'Behind the fireplace...',            requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_secret',     chapter: 3, icon: '🔥' },
-  { id: 'attic',      name: 'Attic',           description: 'The final revelation...',             requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_attic',      chapter: 3, icon: '🏛️' },
-  { id: 'exit',       name: 'The Exit',        description: 'Freedom... or the truth?',            requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_ending',     chapter: 3, icon: '🚪' },
+  { id: 'study',      name: '书房',              description: '父亲最后的秘密...',     requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_study',      chapter: 1, icon: '📚' },
+  { id: 'gallery',    name: '画廊',              description: '画像的目光如影随形...', requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_gallery',    chapter: 1, icon: '🖼️' },
+  { id: 'wine_cellar',name: '酒窖',              description: '地下室的脚步声...',        requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_cellar',     chapter: 2, icon: '🍷' },
+  { id: 'accounting', name: '账房',              description: '伪造的签名...',              requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_accounting', chapter: 2, icon: '💰' },
+  { id: 'grandma',    name: '祖母房',            description: '祖母什么都知道...',         requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_grandma',    chapter: 3, icon: '👵' },
+  { id: 'secret',     name: '密室',              description: '壁炉后的秘密...',            requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_secret',     chapter: 3, icon: '🔥' },
+  { id: 'attic',      name: '阁楼',             description: '最终的真相...',             requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_attic',      chapter: 3, icon: '🏛️' },
+  { id: 'exit',       name: '出口',             description: '自由...还是真相?',            requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_ending',     chapter: 3, icon: '🚪' },
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

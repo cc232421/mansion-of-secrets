@@ -8,6 +8,7 @@ export interface Cutscene {
   id: string;
   chapter: number;
   title: string;
+  titleZh?: string;
   lines: CutsceneLine[];
   triggeredBy?: string; // 'start' | 'order_complete' | etc
   givesEvidence?: string; // evidence ID
@@ -21,7 +22,7 @@ export const CHAPTERS: Cutscene[][] = [
     {
       id: 'cs_01',
       chapter: 1,
-      title: 'The Return',
+      title: 'The Return', titleZh: '归来',
       lines: [
         { speaker: 'Emily', text: "I'm home, sweetheart... Brad? Claire? Anyone?", emotion: 'neutral' },
         { speaker: 'Emily', text: "The house is so quiet... Brad's car is in the driveway though.", emotion: 'neutral' },
@@ -32,7 +33,7 @@ export const CHAPTERS: Cutscene[][] = [
     {
       id: 'cs_02',
       chapter: 1,
-      title: 'The Door',
+      title: 'The Door', titleZh: '门后',
       lines: [
         { speaker: 'Emily', text: "Brad? I saw the light under the door—", emotion: 'neutral' },
         { speaker: 'Emily', text: "Brad... and Claire?", emotion: 'shocked' },
@@ -46,7 +47,7 @@ export const CHAPTERS: Cutscene[][] = [
     {
       id: 'cs_03',
       chapter: 1,
-      title: 'The Confrontation',
+      title: 'The Confrontation', titleZh: '对质',
       lines: [
         { speaker: 'Brad', text: "Emily, calm down—", emotion: 'angry' },
         { speaker: 'Emily', text: "Don't tell me to calm down! Pack your things, Brad. You're done.", emotion: 'determined' },
@@ -60,7 +61,7 @@ export const CHAPTERS: Cutscene[][] = [
     {
       id: 'cs_04',
       chapter: 1,
-      title: 'Thrown Out',
+      title: 'Thrown Out', titleZh: '被赶出',
       lines: [
         { speaker: 'Emily', text: "I can't believe— I just can't—", emotion: 'sad' },
         { speaker: 'Emily', text: "Twenty years of marriage. Twenty years.", emotion: 'sad' },
@@ -74,7 +75,7 @@ export const CHAPTERS: Cutscene[][] = [
     {
       id: 'cs_05',
       chapter: 1,
-      title: 'The Discovery',
+      title: 'The Discovery', titleZh: '发现',
       lines: [
         { speaker: 'Emily', text: "I need air. I need to think.", emotion: 'sad' },
         { speaker: 'Emily', text: "I'll go around to the back porch, catch my breath—", emotion: 'neutral' },
@@ -88,7 +89,7 @@ export const CHAPTERS: Cutscene[][] = [
     {
       id: 'cs_06',
       chapter: 1,
-      title: 'The Detective',
+      title: 'The Detective', titleZh: '侦探',
       lines: [
         { speaker: 'Detective Morgan', text: "Ms. Harper, I'm Detective Morgan. I'm so sorry for your loss.", emotion: 'neutral' },
         { speaker: 'Emily', text: "My father... they say he fell. But something's wrong.", emotion: 'sad' },

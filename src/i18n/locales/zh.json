@@ -56,6 +56,8 @@
     "refreshOrders": "刷新",
     "energyCost": "⚡ 消耗",
     "noOrders": "暂无订单，继续游戏解锁！",
+    "noActiveOrders": "暂无进行中的订单，继续游戏解锁！",
+    "buySuccess": "⚡ +30 能量已恢复！",
     "notEnoughCoins": "金币不足"
   },
   "story": {

@@ -198,7 +198,7 @@ function TabletLayout({
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ fontSize: 13, color: '#C9A84C', fontWeight: 600 }}>
-                {currentChapterData?.title || 'Chapter 1'}
+                {(currentChapterData as any)?.titleZh || currentChapterData?.title || '第1章'}
               </span>
               <span style={{ fontSize: 13, color: 'rgba(255,248,240,0.6)' }}>{storyProgress}%</span>
             </div>
