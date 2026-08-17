@@ -10,6 +10,8 @@ import { OrdersPanel } from './ui/components/OrdersPanel';
 import { StoryPanel } from './ui/components/StoryPanel';
 import { CutsceneModal } from './ui/components/CutsceneModal';
 import { LegendaryMergeModal } from './ui/components/LegendaryMergeModal';
+import { EvidenceTeaserToast } from './ui/components/EvidenceTeaserToast';
+import { RoomUnlockAnimation } from './ui/components/RoomUnlockAnimation';
 import { TabBar, Tab } from './ui/components/TabBar';
 import { Item } from './data/items';
 import { CHAPTERS } from './data/chapters';
@@ -29,7 +31,7 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [legendaryItem, setLegendaryItem] = useState<Item | null>(null);
   const { t } = useTranslation();
-  const { storyProgress, currentChapter } = useGameStore();
+  const { storyProgress, currentChapter, latestEvidence, latestUnlockedRoom, rooms, clearLatestEvidence, clearLatestUnlockedRoom } = useGameStore();
 
   // Track screen size for responsive layout
   const [layout, setLayout] = useState<Layout>('desktop');
@@ -120,6 +122,12 @@ function App() {
           onClose={() => setLegendaryItem(null)}
         />
       )}
+
+      {/* Evidence teaser toast */}
+      <EvidenceToast />
+
+      {/* Room unlock animation */}
+      <RoomUnlockToast />
     </div>
   );
 }
@@ -307,6 +315,32 @@ function DesktopLayout({
         <OrdersPanel />
       </div>
     </div>
+  );
+}
+
+// ── Evidence Teaser Toast ─────────────────────────────────────────────
+function EvidenceToast() {
+  const { latestEvidence, rooms, clearLatestEvidence } = useGameStore();
+  if (!latestEvidence) return null;
+  const room = rooms.find(r => r.id === latestEvidence.roomId);
+  return (
+    <EvidenceTeaserToast
+      evidence={latestEvidence}
+      roomName={room?.name ?? ''}
+      onClose={clearLatestEvidence}
+    />
+  );
+}
+
+// ── Room Unlock Animation ─────────────────────────────────────────────
+function RoomUnlockToast() {
+  const { latestUnlockedRoom, clearLatestUnlockedRoom } = useGameStore();
+  if (!latestUnlockedRoom) return null;
+  return (
+    <RoomUnlockAnimation
+      room={latestUnlockedRoom}
+      onClose={clearLatestUnlockedRoom}
+    />
   );
 }
 

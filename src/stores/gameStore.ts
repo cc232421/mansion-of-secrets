@@ -8,7 +8,10 @@ export interface Evidence {
   id: string;
   type: 'key' | 'photo' | 'crystal';
   roomId: string;
-  teaserShown: boolean;
+  teaserText: string;   // 第1个碎片时显示的悬念文字
+  revealText: string;   // 第2个碎片时显示的关键线索
+  teaserShown: boolean; // Teaser 1 是否已展示
+  revealShown: boolean; // Teaser 2 是否已展示
   obtained: boolean;
 }
 
@@ -16,6 +19,8 @@ export interface Room {
   id: string;
   name: string;
   description: string;
+  teaserText: string;     // 第1个碎片的悬念文字
+  revealText: string;     // 第2个碎片的关键线索
   requiredEvidenceCount: number; // 只需数量，不需特定ID
   unlocked: boolean;
   teaserCutsceneId: string;
@@ -52,6 +57,10 @@ export interface GameState {
   buyEnergy: () => boolean;
   refreshOrders: () => void;
   reset: () => void;
+  latestEvidence: Evidence | null;
+  latestUnlockedRoom: Room | null;
+  clearLatestEvidence: () => void;
+  clearLatestUnlockedRoom: () => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -66,14 +75,110 @@ const INITIAL_BOARD_SIZE = 8;
 // ─── Room definitions ────────────────────────────────────────────────────────
 
 const INITIAL_ROOMS: Room[] = [
-  { id: 'study',      name: '书房',              description: '父亲最后的秘密...',     requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_study',      chapter: 1, icon: '📚' },
-  { id: 'gallery',    name: '画廊',              description: '画像的目光如影随形...', requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_gallery',    chapter: 1, icon: '🖼️' },
-  { id: 'wine_cellar',name: '酒窖',              description: '地下室的脚步声...',        requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_cellar',     chapter: 2, icon: '🍷' },
-  { id: 'accounting', name: '账房',              description: '伪造的签名...',              requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_accounting', chapter: 2, icon: '💰' },
-  { id: 'grandma',    name: '祖母房',            description: '祖母什么都知道...',         requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_grandma',    chapter: 3, icon: '👵' },
-  { id: 'secret',     name: '密室',              description: '壁炉后的秘密...',            requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_secret',     chapter: 3, icon: '🔥' },
-  { id: 'attic',      name: '阁楼',             description: '最终的真相...',             requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_attic',      chapter: 3, icon: '🏛️' },
-  { id: 'exit',       name: '出口',             description: '自由...还是真相?',            requiredEvidenceCount: 3, unlocked: false, teaserCutsceneId: '', fullCutsceneId: 'cs_ending',     chapter: 3, icon: '🚪' },
+  {
+    id: 'study',
+    name: '书房',
+    description: '父亲最后的秘密...',
+    teaserText: '一封未署名的信从书页间滑落...',
+    revealText: '信上写着："她不是你的亲生女儿。"',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_study',
+    chapter: 1,
+    icon: '📚',
+  },
+  {
+    id: 'gallery',
+    name: '画廊',
+    description: '画像的目光如影随形...',
+    teaserText: '画中人的眼睛...似乎在追随你移动。',
+    revealText: '画作角落有一个隐藏的签名日期：1985年——Emily出生前两年。',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_gallery',
+    chapter: 1,
+    icon: '🖼️',
+  },
+  {
+    id: 'wine_cellar',
+    name: '酒窖',
+    description: '地下室的脚步声...',
+    teaserText: '深夜，酒窖深处传来玻璃碰撞的声音...',
+    revealText: '一个隐藏的保险箱，密码是Brad的生日。里面是一份领养文件。',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_cellar',
+    chapter: 2,
+    icon: '🍷',
+  },
+  {
+    id: 'accounting',
+    name: '账房',
+    description: '伪造的签名...',
+    teaserText: '账本上的数字，似乎被人篡改过...',
+    revealText: '父亲的笔迹在颤抖——这不是他写的。有人在模仿他的签名。',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_accounting',
+    chapter: 2,
+    icon: '💰',
+  },
+  {
+    id: 'grandma',
+    name: '祖母房',
+    description: '祖母什么都知道...',
+    teaserText: '祖母的遗物箱里，有一封从未寄出的信...',
+    revealText: '"Claire，我对不起Emily。她是你和Brad的女儿。"',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_grandma',
+    chapter: 3,
+    icon: '👵',
+  },
+  {
+    id: 'secret',
+    name: '密室',
+    description: '壁炉后的秘密...',
+    teaserText: '壁炉的石板松动了一块，露出一道暗门...',
+    revealText: '密室里有一张照片：年轻的父亲，和一个长得和Emily一模一样的女人。',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_secret',
+    chapter: 3,
+    icon: '🔥',
+  },
+  {
+    id: 'attic',
+    name: '阁楼',
+    description: '最终的真相...',
+    teaserText: '阁楼的灰尘下，藏着一个尘封已久的秘密...',
+    revealText: '一份医疗记录：Emily的双胞胎姐姐，出生时被卖给了Harper家。',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_attic',
+    chapter: 3,
+    icon: '🏛️',
+  },
+  {
+    id: 'exit',
+    name: '出口',
+    description: '自由...还是真相?',
+    teaserText: '大门近在咫尺，但真相还在这宅邸深处等待...',
+    revealText: 'Emily终于明白了一切——她的整个人生，都是一场精心设计的谎言。',
+    requiredEvidenceCount: 3,
+    unlocked: false,
+    teaserCutsceneId: '',
+    fullCutsceneId: 'cs_ending',
+    chapter: 3,
+    icon: '🚪',
+  },
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -208,6 +313,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     // L4 order → 40% evidence drop
     let newEvidence = [...state.evidence];
+    let newRooms = [...state.rooms];
     let newStoryProgress = state.storyProgress;
     let message = `Order complete! +${order.rewardCoins} coins`;
 
@@ -229,15 +335,44 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         if (currentCount < room.requiredEvidenceCount) {
           const evidenceId = `${type}_${room.id}_${Date.now()}`;
-          newEvidence.push({ id: evidenceId, type, roomId: room.id, teaserShown: false, obtained: true });
+          const newEv = {
+            id: evidenceId,
+            type,
+            roomId: room.id,
+            teaserText: room.teaserText,
+            revealText: room.revealText,
+            teaserShown: false,
+            revealShown: false,
+            obtained: true,
+          };
+          newEvidence.push(newEv);
           newStoryProgress = Math.min(100, state.storyProgress + 5);
           message += ` | 🔍 Evidence found for "${room.name}"!`;
 
-          // Check if room just got unlocked
+          // Check if room just got unlocked (after adding this evidence)
           const newCount = newEvidence.filter(e => e.roomId === room.id).length;
+          let unlockedRoom: Room | null = null;
           if (newCount >= room.requiredEvidenceCount && !room.unlocked) {
             message += ` | 🚪 "${room.name}" UNLOCKED!`;
+            // Mark the room as unlocked in newRooms (we'll compute newRooms inline below)
+            newRooms = newRooms.map(r =>
+              r.id === room.id ? { ...r, unlocked: true } : r
+            );
+            unlockedRoom = { ...room, unlocked: true };
           }
+
+          // Set latestEvidence / latestUnlockedRoom for the UI to consume
+          set({
+            board: newBoard,
+            orders: newOrders,
+            coins: newCoins,
+            evidence: newEvidence,
+            rooms: newRooms,
+            storyProgress: newStoryProgress,
+            latestEvidence: newEv,
+            latestUnlockedRoom: unlockedRoom,
+          });
+          return { success: true, message };
         }
       }
     }
@@ -280,16 +415,18 @@ export const useGameStore = create<GameState>((set, get) => ({
   checkAndUnlockRooms: () => {
     const state = get();
     let changed = false;
+    let unlockedRoom: Room | null = null;
     const newRooms = state.rooms.map(room => {
       if (room.unlocked) return room;
       const count = state.evidence.filter(e => e.roomId === room.id).length;
       if (count >= room.requiredEvidenceCount) {
         changed = true;
-        return { ...room, unlocked: true };
+        unlockedRoom = { ...room, unlocked: true };
+        return unlockedRoom;
       }
       return room;
     });
-    if (changed) set({ rooms: newRooms });
+    if (changed) set({ rooms: newRooms, latestUnlockedRoom: unlockedRoom });
   },
 
   calculateCurrentEnergy: () => {
@@ -315,6 +452,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newOrders = indices.map((idx, i) => makeOrder(ORDER_TEMPLATES[idx], `refresh_${i}`));
     set({ orders: newOrders, orderRefreshAt: new Date().toISOString().split('T')[0] });
   },
+
+  latestEvidence: null,
+  latestUnlockedRoom: null,
+
+  clearLatestEvidence: () => set({ latestEvidence: null }),
+
+  clearLatestUnlockedRoom: () => set({ latestUnlockedRoom: null }),
 
   reset: () => {
     set({
