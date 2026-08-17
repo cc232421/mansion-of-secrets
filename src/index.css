@@ -759,3 +759,205 @@ body {
   color: rgba(255, 248, 240, 0.7);
   font-family: Georgia, serif;
 }
+
+/* ── Energy Tier Animations ─────────────────────────── */
+
+@keyframes energy-pulse {
+  0%, 100% { box-shadow: 0 0 6px var(--energy-color, #FFD700); }
+  50% { box-shadow: 0 0 18px var(--energy-color, #FFD700); }
+}
+
+@keyframes energy-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-2px); }
+  30% { transform: translateX(2px); }
+  45% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+  90% { transform: translateX(1px); }
+}
+
+.energy-widget-pulse {
+  --energy-color: #FFD700;
+  animation: energy-pulse 1.4s ease-in-out infinite;
+}
+
+.energy-widget-shake {
+  --energy-color: #EF4444;
+  animation: energy-shake 0.6s ease-in-out infinite;
+}
+
+/* ── Board low-energy dim overlay ─────────────────── */
+
+.merge-board-wrapper.low-energy .merge-board-inner {
+  filter: brightness(0.6) saturate(0.7);
+  transition: filter 0.5s ease;
+}
+
+.merge-board-wrapper.high-energy .merge-board-inner {
+  filter: brightness(1.05);
+  transition: filter 0.5s ease;
+}
+
+/* ── Arrange Board Button ──────────────────────────── */
+
+.arrange-btn {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(45, 27, 20, 0.9);
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  border-radius: 10px;
+  color: #C9A84C;
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.arrange-btn:hover {
+  background: rgba(201, 168, 76, 0.2);
+  border-color: #C9A84C;
+  transform: scale(1.05);
+}
+
+.arrange-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Arrange animation ─────────────────────────────── */
+
+@keyframes arrange-pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.arrange-btn.arranging {
+  animation: arrange-pop 0.3s ease-out;
+}
+
+/* ── Tutorial Overlay ──────────────────────────────── */
+
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9800;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlay-fade-in 0.3s ease-out;
+}
+
+.tutorial-card {
+  background: linear-gradient(145deg, #1a0a00 0%, #2d1500 60%, #1a0a00 100%);
+  border: 2px solid #C9A84C;
+  border-radius: 20px;
+  padding: 32px 36px 24px;
+  width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 0 40px rgba(201, 168, 76, 0.4), 0 20px 60px rgba(0, 0, 0, 0.8);
+  animation: room-unlock-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.tutorial-step-dots {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tutorial-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(201, 168, 76, 0.3);
+  transition: all 0.3s;
+}
+
+.tutorial-dot.active {
+  background: #FFD700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+.tutorial-dot.done {
+  background: #C9A84C;
+}
+
+.tutorial-icon {
+  font-size: 48px;
+  filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.4));
+}
+
+.tutorial-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  color: #FFD700;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+.tutorial-desc {
+  font-size: 14px;
+  color: rgba(255, 248, 240, 0.8);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.tutorial-hint {
+  font-size: 12px;
+  color: rgba(255, 248, 240, 0.5);
+  font-style: italic;
+  text-align: center;
+}
+
+.tutorial-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.tutorial-skip {
+  flex: 1;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 10px;
+  color: rgba(255, 248, 240, 0.5);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tutorial-skip:hover {
+  border-color: rgba(201, 168, 76, 0.6);
+  color: rgba(255, 248, 240, 0.8);
+}
+
+.tutorial-next {
+  flex: 2;
+  padding: 10px;
+  background: linear-gradient(135deg, #C9A84C, #FFD700);
+  border: none;
+  border-radius: 10px;
+  color: #1a0a00;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.tutorial-next:active {
+  transform: scale(0.97);
+}

@@ -88,10 +88,13 @@ export interface GameState {
   clearLatestEvidence: () => void;
   clearLatestUnlockedRoom: () => void;
   sellItem: (slotIndex: number) => { success: boolean; coinsEarned: number };
+  arrangeBoard: () => { success: boolean; message?: string };
   dailyReward: DailyReward | null;
   legendaryOrder: LegendaryOrder | null;
   showDailyRewardModal: boolean;
   setShowDailyRewardModal: (v: boolean) => void;
+  hasSeenTutorial: boolean;
+  setHasSeenTutorial: () => void;
   setDailyReward: (dr: DailyReward) => void;
   claimDailyReward: () => { coins: number; refresher: boolean };
   checkAndSpawnLegendaryOrder: () => void;
@@ -337,6 +340,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   legendaryOrder: null,
   showDailyRewardModal: false,
   setShowDailyRewardModal: (v: boolean) => set({ showDailyRewardModal: v }),
+  hasSeenTutorial: localStorage.getItem('hasSeenTutorial') === 'true',
+  setHasSeenTutorial: () => {
+    localStorage.setItem('hasSeenTutorial', 'true');
+    set({ hasSeenTutorial: true });
+  },
   setDailyReward: (dr: DailyReward) => set({ dailyReward: dr }),
 
   claimDailyReward: () => {
@@ -695,6 +703,24 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     return { success: true, coinsEarned };
+  },
+
+  arrangeBoard: () => {
+    const state = get();
+    if (state.coins < 10) return { success: false, message: '金币不足（需要10金币）' };
+
+    // Compact: gather all non-null items, fill from left, nulls to right
+    const items = state.board.filter(Boolean) as Item[];
+    const empty: (Item | null)[] = [];
+    for (let i = 0; i < 36; i++) empty.push(null);
+    const newBoard = [...empty, ...items].slice(0, 36);
+
+    set({
+      board: newBoard,
+      coins: state.coins - 10,
+    });
+
+    return { success: true };
   },
 
   reset: () => {

@@ -13,6 +13,7 @@ import { LegendaryMergeModal } from './ui/components/LegendaryMergeModal';
 import { DailyRewardModal } from './ui/components/DailyRewardModal';
 import { EvidenceTeaserToast } from './ui/components/EvidenceTeaserToast';
 import { RoomUnlockAnimation } from './ui/components/RoomUnlockAnimation';
+import { TutorialOverlay } from './ui/components/TutorialOverlay';
 import { TabBar, Tab } from './ui/components/TabBar';
 import { Item } from './data/items';
 import { CHAPTERS } from './data/chapters';
@@ -32,7 +33,7 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [legendaryItem, setLegendaryItem] = useState<Item | null>(null);
   const { t } = useTranslation();
-  const { storyProgress, currentChapter, latestEvidence, latestUnlockedRoom, rooms, clearLatestEvidence, clearLatestUnlockedRoom, showDailyRewardModal } = useGameStore();
+  const { storyProgress, currentChapter, latestEvidence, latestUnlockedRoom, rooms, clearLatestEvidence, clearLatestUnlockedRoom, showDailyRewardModal, hasSeenTutorial } = useGameStore();
 
   // Track screen size for responsive layout
   const [layout, setLayout] = useState<Layout>('desktop');
@@ -178,6 +179,9 @@ function App() {
 
       {/* Daily reward modal */}
       {showDailyRewardModal && <DailyRewardModal />}
+
+      {/* Tutorial overlay (first-time players) */}
+      {!hasSeenTutorial && gameStarted && <TutorialOverlay />}
     </div>
   );
 }

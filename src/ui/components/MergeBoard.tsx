@@ -33,8 +33,12 @@ interface MergeBoardProps {
 
 export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
   const { t } = useTranslation();
-  const { board, setBoardItems, addCoins, sellItem } = useGameStore();
+  const { board, setBoardItems, addCoins, sellItem, arrangeBoard } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
+  const energyTier = Math.floor((currentEnergy / 120) * 5); // 0-4
+  const isLowEnergy = energyTier === 0;
+  const isHighEnergy = energyTier === 4;
+  const [arranging, setArranging] = useState(false);
 
   // Responsive cell size — calculated from container width
   const containerRef = useRef<HTMLDivElement>(null);
@@ -224,8 +228,33 @@ export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
   const totalBoardW = BOARD_PADDING * 2 + cellSize * COLS + CELL_GAP * (COLS - 1);
   const totalBoardH = BOARD_PADDING * 2 + cellSize * ROWS + CELL_GAP * (ROWS - 1);
 
+  const handleArrange = () => {
+    if (arranging) return;
+    setArranging(true);
+    const result = arrangeBoard();
+    if (!result.success) {
+      Sound.error();
+    } else {
+      Sound.merge(1);
+    }
+    setTimeout(() => setArranging(false), 400);
+  };
+
   return (
-    <div className="merge-board-wrapper" ref={containerRef} style={{ position: 'relative' }}>
+    <div
+      className={`merge-board-wrapper ${isLowEnergy ? 'low-energy' : ''} ${isHighEnergy ? 'high-energy' : ''}`}
+      ref={containerRef}
+      style={{ position: 'relative' }}
+    >
+      {/* Arrange button */}
+      <button
+        className={`arrange-btn ${arranging ? 'arranging' : ''}`}
+        onClick={handleArrange}
+        title="整理棋盘（10金币）"
+      >
+        🧹 整理
+      </button>
+
       {/* Sell button */}
       <button
         className={`sell-btn ${sellMode ? 'sell-btn-active' : ''}`}

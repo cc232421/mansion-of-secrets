@@ -257,14 +257,16 @@ interface EnergyTierInfo {
   color: string;
   bgColor: string;
   icon: string;
+  pulse: boolean;
+  shake: boolean;
 }
 
 function getEnergyTier(pct: number): EnergyTierInfo {
-  if (pct <= 0.16)  return { tier: 0, label: '能量耗尽',  color: '#EF4444', bgColor: 'rgba(239,68,68,0.15)',   icon: '💀' };
-  if (pct <= 0.36)  return { tier: 1, label: '能量不足',  color: '#F97316', bgColor: 'rgba(249,115,22,0.15)',  icon: '⚠️' };
-  if (pct <= 0.66)  return { tier: 2, label: '能量一般',  color: '#FBBF24', bgColor: 'rgba(251,191,36,0.15)',  icon: '💛' };
-  if (pct <= 0.91)  return { tier: 3, label: '能量充足',  color: '#34D399', bgColor: 'rgba(52,211,153,0.15)',  icon: '💚' };
-                   return { tier: 4, label: '能量充沛',  color: '#FFD700', bgColor: 'rgba(255,215,0,0.15)',    icon: '⚡' };
+  if (pct <= 0)    return { tier: 0, label: '能量耗尽',  color: '#EF4444', bgColor: 'rgba(239,68,68,0.15)',   icon: '💀',  pulse: true,  shake: true  };
+  if (pct <= 0.36) return { tier: 1, label: '能量不足',  color: '#F97316', bgColor: 'rgba(249,115,22,0.15)',  icon: '⚠️',  pulse: false, shake: false };
+  if (pct <= 0.66) return { tier: 2, label: '能量一般',  color: '#FBBF24', bgColor: 'rgba(251,191,36,0.15)',  icon: '💛',  pulse: false, shake: false };
+  if (pct <= 0.91) return { tier: 3, label: '能量充足',  color: '#34D399', bgColor: 'rgba(52,211,153,0.15)', icon: '💚',  pulse: false, shake: false };
+                      return { tier: 4, label: '能量充沛',  color: '#FFD700', bgColor: 'rgba(255,215,0,0.15)',    icon: '⚡',  pulse: true,  shake: false };
 }
 
 function EnergyDisplay({ currentEnergy, maxEnergy, isMobile }: {
@@ -277,6 +279,7 @@ function EnergyDisplay({ currentEnergy, maxEnergy, isMobile }: {
 
   return (
     <div
+      className={tier.shake ? 'energy-widget-shake' : tier.pulse ? 'energy-widget-pulse' : ''}
       style={{
         display: 'flex',
         alignItems: 'center',

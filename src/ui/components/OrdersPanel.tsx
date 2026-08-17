@@ -5,8 +5,10 @@ import { Sound } from '../../services/soundService';
 
 export function OrdersPanel() {
   const { t } = useTranslation();
-  const { orders, board, fulfillOrder, coins, buyEnergy, legendaryOrder, fulfillLegendaryOrder } = useGameStore();
+  const { orders, board, fulfillOrder, coins, buyEnergy, legendaryOrder, fulfillLegendaryOrder, currentChapter, rooms } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
+  const roomsUnlocked = rooms.filter(r => r.unlocked).length;
+  const totalRooms = rooms.length;
   const [message, setMessage] = useState<string | null>(null);
 
   // Countdown ticker for legendary order
@@ -250,6 +252,30 @@ export function OrdersPanel() {
 
       {/* Energy buy section */}
       <div className="mt-3 pt-3 border-t border-[#C9A84C]/20">
+        {/* Chapter progress */}
+        <div className="mb-3 p-2 rounded-lg" style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)' }}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[#FFF8F0]/50">第 {currentChapter} 章</span>
+            <span className="text-xs text-[#C9A84C]">{roomsUnlocked}/{totalRooms} 房间</span>
+          </div>
+          <div className="w-full rounded-full h-1.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.round((roomsUnlocked / totalRooms) * 100)}%`,
+                background: 'linear-gradient(90deg, #C9A84C, #FFD700)',
+              }}
+            />
+          </div>
+          <div className="mt-1 text-center">
+            <span className="text-xs text-[#FFF8F0]/40">
+              {totalRooms - roomsUnlocked > 0
+                ? `距下一章节还差 ${totalRooms - roomsUnlocked} 个房间`
+                : '✨ 章节完成！'}
+            </span>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs text-[#FFF8F0]/60">⚡ {currentEnergy}/120</span>
           <span className="text-xs text-[#FFF8F0]/40">🪙 {coins}</span>
