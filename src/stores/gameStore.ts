@@ -29,6 +29,32 @@ export interface Room {
   icon: string;
 }
 
+export interface Requirement {
+  type: 'key' | 'photo' | 'crystal';
+  level: ItemLevel;
+  count: number;
+}
+
+export interface LegendaryOrder {
+  id: string;
+  description: string;   // 悬念风格描述
+  descriptionZh: string; // 中文悬念描述
+  requirements: Requirement[];
+  rewardCoins: number;    // 800-1200
+  energyCost: number;      // 40-60
+  expiresAt: number;       // timestamp (24h from spawn)
+  doubleEvidence: boolean;  // 完成时是否双倍掉落
+  completed: boolean;
+}
+
+// 每日登录奖励
+export interface DailyReward {
+  lastLoginDate: string;     // 'YYYY-MM-DD'
+  currentStreak: number;     // 连续登录天数 (1-7)
+  claimedToday: boolean;     // 今日是否已领取
+  legendaryRefreshers: number; // 传说刷新券数量
+}
+
 export interface GameState {
   version: string;
   lastSaved: string;
@@ -62,6 +88,14 @@ export interface GameState {
   clearLatestEvidence: () => void;
   clearLatestUnlockedRoom: () => void;
   sellItem: (slotIndex: number) => { success: boolean; coinsEarned: number };
+  dailyReward: DailyReward | null;
+  legendaryOrder: LegendaryOrder | null;
+  showDailyRewardModal: boolean;
+  setShowDailyRewardModal: (v: boolean) => void;
+  setDailyReward: (dr: DailyReward) => void;
+  claimDailyReward: () => { coins: number; refresher: boolean };
+  checkAndSpawnLegendaryOrder: () => void;
+  fulfillLegendaryOrder: (orderId: string) => { success: boolean; message?: string };
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -74,6 +108,71 @@ const ENERGY_BUY_AMOUNT = 30;
 const INITIAL_BOARD_SIZE = 8;
 
 // ─── Room definitions ────────────────────────────────────────────────────────
+
+// ─── Legendary Order Templates ───────────────────────────────────────────────
+
+const LEGENDARY_ORDER_TEMPLATES: Omit<LegendaryOrder, 'id' | 'expiresAt' | 'completed'>[] = [
+  {
+    description: 'The key in the safe doesn\'t fit any lock in this house. Who changed the locks?',
+    descriptionZh: '保险箱里的钥匙，打不开这宅子里的任何一扇门。谁换过锁？',
+    requirements: [{ type: 'key', level: 4, count: 1 }],
+    rewardCoins: 1000,
+    energyCost: 50,
+    doubleEvidence: true,
+  },
+  {
+    description: 'The photo behind the painting shows a woman who died before I was born.',
+    descriptionZh: '画像背后藏着一张照片——照片里的女人，在我出生前就已离世。',
+    requirements: [{ type: 'photo', level: 4, count: 1 }],
+    rewardCoins: 1200,
+    energyCost: 60,
+    doubleEvidence: true,
+  },
+  {
+    description: 'The crystal hums when I hold it near the fireplace. It remembers something.',
+    descriptionZh: '当我把水晶靠近壁炉时，它开始嗡鸣。它记得什么。',
+    requirements: [{ type: 'crystal', level: 4, count: 1 }],
+    rewardCoins: 1000,
+    energyCost: 50,
+    doubleEvidence: true,
+  },
+  {
+    description: 'Combine all three artifacts. Only together do they reveal the full truth.',
+    descriptionZh: '将三件神器合一。只有三者相聚，真相才能完整显现。',
+    requirements: [
+      { type: 'key', level: 4, count: 1 },
+      { type: 'photo', level: 4, count: 1 },
+      { type: 'crystal', level: 4, count: 1 },
+    ],
+    rewardCoins: 2000,
+    energyCost: 80,
+    doubleEvidence: false,
+  },
+  {
+    description: 'Grandma\'s locket was never opened. The heirloom key fits it perfectly.',
+    descriptionZh: '祖母的项链盒从未被打开过。那把传家钥匙与它完美契合。',
+    requirements: [{ type: 'key', level: 3, count: 2 }],
+    rewardCoins: 800,
+    energyCost: 40,
+    doubleEvidence: true,
+  },
+  {
+    description: 'The hidden diary mentions three locations. Only the crystal can reveal them all.',
+    descriptionZh: '隐藏日记提到三个地点。只有水晶能将它们全部显现。',
+    requirements: [{ type: 'crystal', level: 3, count: 2 }],
+    rewardCoins: 800,
+    energyCost: 40,
+    doubleEvidence: true,
+  },
+];
+
+// ─── Daily Reward Table ───────────────────────────────────────────────────
+
+const DAILY_REWARD_TABLE = [50, 80, 120, 150, 200, 300, 500]; // day 1-7
+
+function todayString() {
+  return new Date().toISOString().split('T')[0];
+}
 
 const INITIAL_ROOMS: Room[] = [
   {
@@ -232,6 +331,123 @@ export const useGameStore = create<GameState>((set, get) => ({
   storyProgress: 0,
   currentChapter: 1,
   seenCutscenes: [],
+
+  // Daily reward state (initialized on first render via checkLoginStreak)
+  dailyReward: null,
+  legendaryOrder: null,
+  showDailyRewardModal: false,
+  setShowDailyRewardModal: (v: boolean) => set({ showDailyRewardModal: v }),
+  setDailyReward: (dr: DailyReward) => set({ dailyReward: dr }),
+
+  claimDailyReward: () => {
+    const state = get();
+    const dr = state.dailyReward;
+    if (!dr || dr.claimedToday) return { coins: 0, refresher: false };
+
+    const today = todayString();
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    let newStreak = dr.lastLoginDate === yesterday ? dr.currentStreak + 1 : 1;
+    const dayIndex = Math.min(newStreak - 1, 6); // 0-6 index
+    const coins = DAILY_REWARD_TABLE[dayIndex] ?? 500;
+    const isDay7 = newStreak === 7;
+    const newRefresher = isDay7 ? dr.legendaryRefreshers + 1 : dr.legendaryRefreshers;
+
+    const newDr: DailyReward = {
+      lastLoginDate: today,
+      currentStreak: newStreak,
+      claimedToday: true,
+      legendaryRefreshers: newRefresher,
+    };
+
+    set({
+      dailyReward: newDr,
+      coins: state.coins + coins,
+      showDailyRewardModal: false,
+    });
+
+    localStorage.setItem('dailyReward', JSON.stringify(newDr));
+
+    return { coins, refresher: isDay7 };
+  },
+
+  checkAndSpawnLegendaryOrder: () => {
+    const state = get();
+    if (state.legendaryOrder && !state.legendaryOrder.completed && Date.now() < state.legendaryOrder.expiresAt) return;
+    if (Math.random() > 0.5) return;
+
+    const template = LEGENDARY_ORDER_TEMPLATES[
+      Math.floor(Math.random() * LEGENDARY_ORDER_TEMPLATES.length)
+    ];
+    const order: LegendaryOrder = {
+      ...template,
+      id: `legendary_${Date.now()}`,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      completed: false,
+    };
+    set({ legendaryOrder: order });
+  },
+
+  fulfillLegendaryOrder: (orderId: string) => {
+    const state = get();
+    const order = state.legendaryOrder;
+    if (!order || order.id !== orderId || order.completed) {
+      return { success: false, message: 'No legendary order found' };
+    }
+
+    for (const req of order.requirements) {
+      let count = 0;
+      for (const item of state.board) {
+        if (item && item.type === req.type && item.level === req.level) count++;
+      }
+      if (count < req.count) {
+        return { success: false, message: 'Missing items' };
+      }
+    }
+
+    const currentEnergy = state.calculateCurrentEnergy();
+    if (currentEnergy < order.energyCost) {
+      return { success: false, message: 'Not enough energy' };
+    }
+
+    const newBoard = [...state.board];
+    const consumed = new Set<number>();
+    for (const req of order.requirements) {
+      let need = req.count;
+      for (let i = 0; i < 36 && need > 0; i++) {
+        if (newBoard[i] && newBoard[i]!.type === req.type && newBoard[i]!.level === req.level && !consumed.has(i)) {
+          newBoard[i] = null;
+          consumed.add(i);
+          need--;
+        }
+      }
+    }
+
+    set({
+      board: newBoard,
+      energy: currentEnergy - order.energyCost,
+      energyLastUpdate: Date.now(),
+      coins: state.coins + order.rewardCoins,
+      legendaryOrder: { ...order, completed: true },
+    });
+
+    if (order.doubleEvidence && Math.random() < 0.8) {
+      const types: ('key' | 'photo' | 'crystal')[] = ['key', 'photo', 'crystal'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const roomsNeedingEvidence = state.rooms.filter(r => !r.unlocked);
+      if (roomsNeedingEvidence.length > 0) {
+        const room = roomsNeedingEvidence[Math.floor(Math.random() * roomsNeedingEvidence.length)];
+        const newEv = {
+          id: `${type}_${room.id}_${Date.now()}`,
+          type, roomId: room.id,
+          teaserText: room.teaserText, revealText: room.revealText,
+          teaserShown: false, revealShown: false, obtained: true,
+        };
+        set(s => ({ evidence: [...s.evidence, newEv], latestEvidence: newEv }));
+      }
+    }
+
+    return { success: true, message: `+${order.rewardCoins} coins!` };
+  },
 
   spendEnergy: (amount) => {
     const state = get();

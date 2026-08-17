@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../stores/gameStore';
 import { Sound } from '../../services/soundService';
 
 export function OrdersPanel() {
   const { t } = useTranslation();
-  const { orders, board, fulfillOrder, coins, buyEnergy } = useGameStore();
+  const { orders, board, fulfillOrder, coins, buyEnergy, legendaryOrder, fulfillLegendaryOrder } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
   const [message, setMessage] = useState<string | null>(null);
+
+  // Countdown ticker for legendary order
+  const [countdown, setCountdown] = useState('');
+  useEffect(() => {
+    if (!legendaryOrder || legendaryOrder.completed) { setCountdown(''); return; }
+    const update = () => {
+      const left = legendaryOrder.expiresAt - Date.now();
+      if (left <= 0) { setCountdown('已过期'); return; }
+      const h = Math.floor(left / 3600000);
+      const m = Math.floor((left % 3600000) / 60000);
+      setCountdown(`${h}小时${m}分`);
+    };
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, [legendaryOrder]);
 
   const displayOrders = orders.length > 0 ? orders : [];
 
@@ -51,6 +67,31 @@ export function OrdersPanel() {
     setTimeout(() => setMessage(null), 2000);
   };
 
+  // Legendary order helpers
+  const canLegendaryFulfill = () => {
+    if (!legendaryOrder || legendaryOrder.completed) return false;
+    if (currentEnergy < legendaryOrder.energyCost) return false;
+    for (const req of legendaryOrder.requirements) {
+      const key = `L${req.level}_${req.type}`;
+      if ((inventory[key] || 0) < req.count) return false;
+    }
+    return true;
+  };
+
+  const handleLegendaryFulfill = () => {
+    if (!legendaryOrder) return;
+    const result = fulfillLegendaryOrder(legendaryOrder.id);
+    if (result.success) {
+      setMessage(`🔥 传说订单完成！+${legendaryOrder.rewardCoins} 🪙`);
+      Sound.orderComplete();
+      Sound.coin();
+    } else {
+      setMessage(`❌ ${result.message}`);
+      Sound.error();
+    }
+    setTimeout(() => setMessage(null), 2500);
+  };
+
   const handleBuyEnergy = () => {
     if (buyEnergy()) {
       setMessage(t('buySuccess') || '⚡ +30 Energy restored!');
@@ -67,6 +108,57 @@ export function OrdersPanel() {
       <h2 className="font-display text-xl text-[#C9A84C] mb-3 flex items-center gap-2" style={{ fontFamily: 'Georgia, serif' }}>
         📋 {t('orders.title')}
       </h2>
+
+      {/* Legendary Order */}
+      {legendaryOrder && !legendaryOrder.completed && (
+        <div className="legendary-order-section">
+          <div className="legendary-order-badge">
+            <div className="legendary-order-header">
+              <span className="legendary-order-title">🔥 传说订单</span>
+              {countdown && <span className="legendary-countdown">⏱ {countdown}</span>}
+            </div>
+            <p className="text-[#FFF8F0]/80 text-sm mb-2" style={{ fontStyle: 'italic' }}>
+              「{legendaryOrder.descriptionZh}」
+            </p>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {legendaryOrder.requirements.map((req, i) => {
+                const key = `L${req.level}_${req.type}`;
+                const have = inventory[key] || 0;
+                const enough = have >= req.count;
+                return (
+                  <span
+                    key={i}
+                    className="text-xs px-2 py-1 rounded"
+                    style={{ background: enough ? 'rgba(76,175,80,0.3)' : 'rgba(201,168,76,0.2)', color: enough ? '#81C784' : '#C9A84C' }}
+                  >
+                    {have}/{req.count}× L{req.level} {req.type}
+                  </span>
+                );
+              })}
+            </div>
+            {legendaryOrder.doubleEvidence && (
+              <div className="text-xs text-[#FF6B35] mb-1">✨ 双倍证据掉落</div>
+            )}
+            <div className="flex justify-between items-center">
+              <span className="text-[#FFD700] text-sm font-semibold">+{legendaryOrder.rewardCoins} 🪙</span>
+              <span className="text-xs text-[#FFB6C1]">⚡{legendaryOrder.energyCost}</span>
+            </div>
+          </div>
+          <button
+            className="w-full py-2 rounded text-sm font-bold transition-all mb-3"
+            style={{
+              background: canLegendaryFulfill() ? 'linear-gradient(135deg, #8B2942, #C9A84C)' : 'rgba(139,41,66,0.3)',
+              color: canLegendaryFulfill() ? '#FFD700' : 'rgba(255,215,0,0.4)',
+              cursor: canLegendaryFulfill() ? 'pointer' : 'not-allowed',
+              border: '1px solid rgba(201,168,76,0.4)',
+            }}
+            onClick={handleLegendaryFulfill}
+            disabled={!canLegendaryFulfill()}
+          >
+            {canLegendaryFulfill() ? '🔥 接受传说订单' : '🔒 条件不足'}
+          </button>
+        </div>
+      )}
 
       {/* Message toast */}
       {message && (

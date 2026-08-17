@@ -10,6 +10,7 @@ import { OrdersPanel } from './ui/components/OrdersPanel';
 import { StoryPanel } from './ui/components/StoryPanel';
 import { CutsceneModal } from './ui/components/CutsceneModal';
 import { LegendaryMergeModal } from './ui/components/LegendaryMergeModal';
+import { DailyRewardModal } from './ui/components/DailyRewardModal';
 import { EvidenceTeaserToast } from './ui/components/EvidenceTeaserToast';
 import { RoomUnlockAnimation } from './ui/components/RoomUnlockAnimation';
 import { TabBar, Tab } from './ui/components/TabBar';
@@ -31,7 +32,7 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [legendaryItem, setLegendaryItem] = useState<Item | null>(null);
   const { t } = useTranslation();
-  const { storyProgress, currentChapter, latestEvidence, latestUnlockedRoom, rooms, clearLatestEvidence, clearLatestUnlockedRoom } = useGameStore();
+  const { storyProgress, currentChapter, latestEvidence, latestUnlockedRoom, rooms, clearLatestEvidence, clearLatestUnlockedRoom, showDailyRewardModal } = useGameStore();
 
   // Track screen size for responsive layout
   const [layout, setLayout] = useState<Layout>('desktop');
@@ -51,6 +52,52 @@ function App() {
   useEffect(() => {
     startEnergyTimer();
   }, []);
+
+  // ── Init: daily reward check + legendary order spawn ──
+  const { dailyReward, legendaryOrder, checkAndSpawnLegendaryOrder, setShowDailyRewardModal, setDailyReward } = useGameStore();
+
+  useEffect(() => {
+    if (!gameStarted) return;
+    // Initialize daily reward state from localStorage (survives across sessions)
+    const saved = localStorage.getItem('dailyReward');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as { lastLoginDate: string; currentStreak: number; claimedToday: boolean; legendaryRefreshers: number };
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        let newStreak = parsed.lastLoginDate === yesterday ? parsed.currentStreak + 1
+          : parsed.lastLoginDate === today ? parsed.currentStreak
+          : 1;
+        let newClaimed = parsed.lastLoginDate === today ? parsed.claimedToday : false;
+        const newDr = {
+          lastLoginDate: today,
+          currentStreak: newStreak,
+          claimedToday: newClaimed,
+          legendaryRefreshers: parsed.legendaryRefreshers ?? 0,
+        };
+        setDailyReward(newDr);
+        localStorage.setItem('dailyReward', JSON.stringify(newDr));
+        // Show modal only if not claimed today
+        if (!newClaimed) {
+          setShowDailyRewardModal(true);
+        }
+      } catch {
+        const newDr = { lastLoginDate: today, currentStreak: 1, claimedToday: false, legendaryRefreshers: 0 };
+        setDailyReward(newDr);
+        localStorage.setItem('dailyReward', JSON.stringify(newDr));
+        setShowDailyRewardModal(true);
+      }
+    } else {
+      // First time player
+      const newDr = { lastLoginDate: today, currentStreak: 1, claimedToday: false, legendaryRefreshers: 0 };
+      setDailyReward(newDr);
+      localStorage.setItem('dailyReward', JSON.stringify(newDr));
+      setShowDailyRewardModal(true);
+    }
+
+    checkAndSpawnLegendaryOrder();
+  }, [gameStarted]);
 
   // Auto-save every 30 seconds
   useEffect(() => {
@@ -128,6 +175,9 @@ function App() {
 
       {/* Room unlock animation */}
       <RoomUnlockToast />
+
+      {/* Daily reward modal */}
+      {showDailyRewardModal && <DailyRewardModal />}
     </div>
   );
 }

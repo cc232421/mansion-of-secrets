@@ -511,3 +511,251 @@ body {
   animation-iteration-count: infinite;
   animation-direction: alternate;
 }
+
+/* ==========================================
+   Daily Reward Modal
+   ========================================== */
+
+.daily-reward-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9600;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  animation: overlay-fade-in 0.3s ease-out;
+}
+
+.daily-reward-card {
+  background: linear-gradient(145deg, #1a0a00 0%, #2d1500 60%, #1a0a00 100%);
+  border: 3px solid #C9A84C;
+  border-radius: 24px;
+  padding: 28px 32px 24px;
+  width: 340px;
+  max-width: 90vw;
+  cursor: default;
+  box-shadow:
+    0 0 60px rgba(201, 168, 76, 0.5),
+    0 20px 60px rgba(0, 0, 0, 0.8);
+  animation: room-unlock-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.daily-reward-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.daily-reward-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+  color: #FFD700;
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+  margin-bottom: 4px;
+}
+
+.daily-reward-subtitle {
+  font-size: 14px;
+  color: rgba(255, 248, 240, 0.6);
+  letter-spacing: 2px;
+}
+
+.streak-num {
+  color: #FFD700;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* 7-day streak row */
+.daily-reward-streak {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 4px;
+}
+
+.streak-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  position: relative;
+}
+
+.streak-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(201, 168, 76, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.3s;
+}
+
+.streak-past .streak-icon {
+  background: rgba(201, 168, 76, 0.15);
+  border-color: #C9A84C;
+}
+
+.streak-current .streak-icon {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #FFD700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  animation: room-icon-pulse 1s ease-in-out infinite;
+}
+
+.streak-coins {
+  font-size: 10px;
+  color: rgba(255, 248, 240, 0.5);
+}
+
+.streak-past .streak-coins { color: #C9A84C; }
+
+.streak-badge {
+  position: absolute;
+  top: -6px;
+  right: 4px;
+  font-size: 10px;
+}
+
+/* Reveal area */
+.daily-reward-reveal {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.reward-waiting { }
+
+.reward-chest {
+  font-size: 56px;
+  filter: drop-shadow(0 0 16px rgba(201, 168, 76, 0.6));
+}
+
+.reward-chest-bounce {
+  animation: room-icon-float 0.6s ease-in-out;
+  animation-iteration-count: 2;
+}
+
+.reward-label {
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(255, 248, 240, 0.6);
+  letter-spacing: 2px;
+  animation: fade-in 0.3s ease-out;
+}
+
+.reward-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: fade-in 0.4s ease-out;
+}
+
+.reward-coin-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 16px;
+  padding: 12px 24px;
+}
+
+.coin-emoji { font-size: 28px; }
+
+.coin-amount {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  color: #FFD700;
+  font-weight: 700;
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+  animation: coin-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes coin-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.refresher-got {
+  color: #FF6B35;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  animation: fade-in 0.5s ease-out;
+}
+
+/* CTA button */
+.daily-reward-cta {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #C9A84C 0%, #FFD700 50%, #C9A84C 100%);
+  border: none;
+  border-radius: 14px;
+  color: #1a0a00;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 16px rgba(201, 168, 76, 0.4);
+  transition: transform 0.1s;
+}
+
+.daily-reward-cta:active {
+  transform: scale(0.97);
+}
+
+.daily-reward-hint {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 248, 240, 0.4);
+  letter-spacing: 1px;
+}
+
+/* ==========================================
+   Legendary Order Badge
+   ========================================== */
+
+.legendary-order-badge {
+  background: linear-gradient(135deg, #8B2942, #C9A84C);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(201, 168, 76, 0.5);
+}
+
+.legendary-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.legendary-order-title {
+  font-size: 12px;
+  color: #FFD700;
+  font-weight: 700;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legendary-countdown {
+  font-size: 11px;
+  color: rgba(255, 248, 240, 0.7);
+  font-family: Georgia, serif;
+}
