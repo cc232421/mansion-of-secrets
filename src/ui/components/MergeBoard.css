@@ -363,3 +363,113 @@
 .merge-item.item-box { }
 .merge-item.item-badge { }
 .merge-item.item-document { }
+
+/* ==========================================
+   Sell Mode
+   ========================================== */
+
+.sell-btn {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  background: rgba(201, 168, 76, 0.15);
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  color: #C9A84C;
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  z-index: 60;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.sell-btn:hover {
+  background: rgba(201, 168, 76, 0.25);
+  border-color: #C9A84C;
+}
+
+.sell-btn-active {
+  background: rgba(255, 215, 0, 0.2) !important;
+  border-color: #FFD700 !important;
+  color: #FFD700 !important;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.sell-mode-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.sell-mode-hint {
+  position: absolute;
+  top: -38px;
+  left: 0;
+  font-size: 11px;
+  color: rgba(255, 215, 0, 0.7);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  animation: fade-in 0.2s ease-out;
+}
+
+.sell-mode-item {
+  cursor: pointer !important;
+  animation: sell-item-pulse 1.2s ease-in-out infinite;
+}
+
+.sell-mode-item:hover {
+  filter: brightness(1.3);
+}
+
+@keyframes sell-item-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(52, 211, 153, 0.5); }
+  50% { box-shadow: 0 0 14px rgba(52, 211, 153, 0.9); }
+}
+
+.sell-price-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: #34D399;
+  color: #0a2010;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 1px 4px;
+  line-height: 1.2;
+  font-family: Georgia, serif;
+  pointer-events: none;
+  animation: badge-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes badge-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.sell-coin-effect {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+  pointer-events: none;
+  z-index: 200;
+  animation: sell-coin-float 1.2s ease-out forwards;
+  font-family: Georgia, serif;
+}
+
+@keyframes sell-coin-float {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  60% { opacity: 1; transform: translateY(-24px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-48px) scale(0.9); }
+}

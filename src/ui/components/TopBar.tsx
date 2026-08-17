@@ -88,31 +88,7 @@ export function TopBar() {
       <div style={{ flex: 1 }} />
 
       {/* Energy */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: isMobile ? 4 : 8,
-          background: 'rgba(201,168,76,0.15)',
-          padding: isMobile ? '5px 10px' : '8px 14px',
-          borderRadius: 16,
-          border: '1px solid #C9A84C',
-          flexShrink: 0,
-        }}
-      >
-        <span style={{ fontSize: isMobile ? 16 : 20 }}>⚡</span>
-        <span
-          style={{
-            fontFamily: 'Georgia, serif',
-            fontSize: isMobile ? 13 : 16,
-            color: '#C9A84C',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {currentEnergy}/{MAX_ENERGY}
-        </span>
-      </div>
+      <EnergyDisplay currentEnergy={currentEnergy} maxEnergy={MAX_ENERGY} isMobile={isMobile} />
 
       {/* Coins */}
       <div
@@ -265,6 +241,106 @@ function MobileStoryProgress() {
         </div>
         <span style={{ fontSize: 12, color: '#C9A84C', fontWeight: 'bold', fontFamily: 'Georgia, serif' }}>
           {storyProgress}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── Energy 5-Tier Display ─────────────────────────────────────────────────────
+
+type EnergyTier = 0 | 1 | 2 | 3 | 4;
+
+interface EnergyTierInfo {
+  tier: EnergyTier;
+  label: string;
+  color: string;
+  bgColor: string;
+  icon: string;
+}
+
+function getEnergyTier(pct: number): EnergyTierInfo {
+  if (pct <= 0.16)  return { tier: 0, label: '能量耗尽',  color: '#EF4444', bgColor: 'rgba(239,68,68,0.15)',   icon: '💀' };
+  if (pct <= 0.36)  return { tier: 1, label: '能量不足',  color: '#F97316', bgColor: 'rgba(249,115,22,0.15)',  icon: '⚠️' };
+  if (pct <= 0.66)  return { tier: 2, label: '能量一般',  color: '#FBBF24', bgColor: 'rgba(251,191,36,0.15)',  icon: '💛' };
+  if (pct <= 0.91)  return { tier: 3, label: '能量充足',  color: '#34D399', bgColor: 'rgba(52,211,153,0.15)',  icon: '💚' };
+                   return { tier: 4, label: '能量充沛',  color: '#FFD700', bgColor: 'rgba(255,215,0,0.15)',    icon: '⚡' };
+}
+
+function EnergyDisplay({ currentEnergy, maxEnergy, isMobile }: {
+  currentEnergy: number;
+  maxEnergy: number;
+  isMobile: boolean;
+}) {
+  const pct = currentEnergy / maxEnergy;
+  const tier = getEnergyTier(pct);
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: isMobile ? 4 : 8,
+        background: tier.bgColor,
+        padding: isMobile ? '5px 10px' : '8px 14px',
+        borderRadius: 16,
+        border: `1px solid ${tier.color}40`,
+        flexShrink: 0,
+        transition: 'background 0.5s, border-color 0.5s',
+        flexDirection: 'column',
+        minWidth: isMobile ? 80 : 110,
+      }}
+    >
+      {/* Top row: icon + number */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8, width: '100%' }}>
+        <span style={{ fontSize: isMobile ? 16 : 20 }}>{tier.icon}</span>
+        <span
+          style={{
+            fontFamily: 'Georgia, serif',
+            fontSize: isMobile ? 13 : 16,
+            color: tier.color,
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+            transition: 'color 0.5s',
+          }}
+        >
+          {currentEnergy}/{maxEnergy}
+        </span>
+      </div>
+
+      {/* Bottom row: bar + label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+        {/* 5-segment bar */}
+        <div style={{ display: 'flex', gap: 2, flex: 1 }}>
+          {[0, 1, 2, 3, 4].map(i => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: isMobile ? 3 : 4,
+                borderRadius: 2,
+                background: i < tier.tier
+                  ? tier.color
+                  : i === tier.tier
+                    ? `${tier.color}60`
+                    : 'rgba(255,255,255,0.1)',
+                transition: 'background 0.4s',
+                boxShadow: i < tier.tier ? `0 0 4px ${tier.color}` : 'none',
+              }}
+            />
+          ))}
+        </div>
+        <span
+          style={{
+            fontSize: isMobile ? 9 : 10,
+            color: tier.color,
+            fontWeight: 600,
+            letterSpacing: '0.3px',
+            whiteSpace: 'nowrap',
+            transition: 'color 0.5s',
+          }}
+        >
+          {tier.label}
         </span>
       </div>
     </div>

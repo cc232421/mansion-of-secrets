@@ -61,6 +61,7 @@ export interface GameState {
   latestUnlockedRoom: Room | null;
   clearLatestEvidence: () => void;
   clearLatestUnlockedRoom: () => void;
+  sellItem: (slotIndex: number) => { success: boolean; coinsEarned: number };
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -459,6 +460,26 @@ export const useGameStore = create<GameState>((set, get) => ({
   clearLatestEvidence: () => set({ latestEvidence: null }),
 
   clearLatestUnlockedRoom: () => set({ latestUnlockedRoom: null }),
+
+  sellItem: (slotIndex: number) => {
+    const state = get();
+    const item = state.board[slotIndex];
+    if (!item) return { success: false, coinsEarned: 0 };
+
+    // Price by level
+    const prices: Record<number, number> = { 1: 5, 2: 15, 3: 50, 4: 200 };
+    const coinsEarned = prices[item.level] ?? 5;
+
+    const newBoard = [...state.board];
+    newBoard[slotIndex] = null;
+
+    set({
+      board: newBoard,
+      coins: state.coins + coinsEarned,
+    });
+
+    return { success: true, coinsEarned };
+  },
 
   reset: () => {
     set({

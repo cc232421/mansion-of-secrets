@@ -33,7 +33,7 @@ interface MergeBoardProps {
 
 export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
   const { t } = useTranslation();
-  const { board, setBoardItems, addCoins } = useGameStore();
+  const { board, setBoardItems, addCoins, sellItem } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
 
   // Responsive cell size — calculated from container width
@@ -66,6 +66,8 @@ export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
   const [highlightCell, setHighlightCell] = useState<{ col: number; row: number } | null>(null);
   const [mergeEffects, setMergeEffects] = useState<MergeEffect[]>([]);
   const [noEnergy, setNoEnergy] = useState(false);
+  const [sellMode, setSellMode] = useState(false);
+  const [sellEffect, setSellEffect] = useState<{ index: number; coins: number; key: string } | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +75,16 @@ export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
   useEffect(() => {
     setNoEnergy(currentEnergy === 0);
   }, [currentEnergy]);
+
+  // ESC to exit sell mode
+  useEffect(() => {
+    if (!sellMode) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSellMode(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [sellMode]);
 
   // Auto-spawn items every 3 seconds
   useEffect(() => {
@@ -213,12 +225,28 @@ export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
   const totalBoardH = BOARD_PADDING * 2 + cellSize * ROWS + CELL_GAP * (ROWS - 1);
 
   return (
-    <div className="merge-board-wrapper" ref={containerRef}>
+    <div className="merge-board-wrapper" ref={containerRef} style={{ position: 'relative' }}>
+      {/* Sell button */}
+      <button
+        className={`sell-btn ${sellMode ? 'sell-btn-active' : ''}`}
+        onClick={() => setSellMode(m => !m)}
+        title="出售物品"
+      >
+        💰 {sellMode ? '完成出售' : '出售物品'}
+      </button>
+
       {/* No energy overlay */}
       {noEnergy && (
         <div className="energy-overlay">
           <p>⚡ {t('menu.outOfEnergy')}</p>
           <p className="text-sm mt-1 opacity-70">{t('menu.buyMore')}</p>
+        </div>
+      )}
+
+      {/* Sell mode overlay — dims board */}
+      {sellMode && (
+        <div className="sell-mode-overlay">
+          <div className="sell-mode-hint">点击物品出售 · ESC退出</div>
         </div>
       )}
 
@@ -269,13 +297,34 @@ export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
             >
               {item && !isDragSource && (
                 <div
-                  className={`merge-item level-${item.level}`}
-                  onPointerDown={(e) => handlePointerDown(e, index)}
+                  className={`merge-item level-${item.level}${sellMode ? ' sell-mode-item' : ''}`}
+                  onPointerDown={(e) => {
+                    if (sellMode) {
+                      e.stopPropagation();
+                      return;
+                    }
+                    handlePointerDown(e, index);
+                  }}
+                  onClick={() => {
+                    if (!sellMode || !item) return;
+                    const { success, coinsEarned } = sellItem(index);
+                    if (success) {
+                      Sound.coin();
+                      setSellEffect({ index, coins: coinsEarned, key: `sell_${Date.now()}` });
+                      setTimeout(() => setSellEffect(null), 1200);
+                    }
+                  }}
                   style={{ width: cellSize, height: cellSize }}
+                  title={sellMode ? `出售 +${({ 1: 5, 2: 15, 3: 50, 4: 200 }[item.level] ?? 5)} 金币` : undefined}
                 >
                   <span className="item-emoji" style={{ fontSize: cellSize * 0.55 }}>{getItemConfig(item).emoji}</span>
                   {item.level === 3 && <span className="item-star">★</span>}
                   {item.level >= 4 && <span className="item-star item-star-lg">★★★</span>}
+                  {sellMode && (
+                    <span className="sell-price-badge">
+                      +{({ 1: 5, 2: 15, 3: 50, 4: 200 }[item.level] ?? 5)}
+                    </span>
+                  )}
                 </div>
               )}
               {effect && (
@@ -285,6 +334,11 @@ export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
                     : effect.isFusion
                       ? '⚡ 融合！'
                       : `+${effect.coins}`}
+                </div>
+              )}
+              {sellEffect && sellEffect.index === index && (
+                <div className="sell-coin-effect" key={sellEffect.key}>
+                  💰 +{sellEffect.coins}
                 </div>
               )}
             </div>
