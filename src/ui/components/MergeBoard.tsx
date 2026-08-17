@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../stores/gameStore';
-import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem, MERGE_ITEMS } from '../../data/items';
+import { createRandomL1Item, canMerge, getItemConfig, Item, ItemLevel, createItem, MERGE_ITEMS, isFusion } from '../../data/items';
 import { Sound } from '../../services/soundService';
 import './MergeBoard.css';
 
@@ -23,9 +23,15 @@ interface MergeEffect {
   row: number;
   coins: number;
   key: string;
+  isFusion?: boolean;
+  isLegendary?: boolean;
 }
 
-export function MergeBoard() {
+interface MergeBoardProps {
+  onLegendaryMerge?: (item: Item) => void;
+}
+
+export function MergeBoard({ onLegendaryMerge }: MergeBoardProps) {
   const { t } = useTranslation();
   const { board, setBoardItems, addCoins } = useGameStore();
   const currentEnergy = useGameStore(s => s.calculateCurrentEnergy());
@@ -143,21 +149,43 @@ export function MergeBoard() {
         if (targetItem && canMerge(drag.item, targetItem) && targetIndex !== drag.sourceIndex) {
           // ✅ MERGE
           const newLevel = (drag.item.level + 1) as ItemLevel;
+          const isFusionMerge = isFusion(drag.item, targetItem);
+
+          // Determine result type:
+          // - Standard merge: same type as source item
+          // - Fusion (L3 + different L3): 50% same-type, 50% random type
+          let resultType = drag.item.type;
+          if (isFusionMerge && newLevel === 4) {
+            const allTypes: ('key' | 'photo' | 'crystal')[] = ['key', 'photo', 'crystal'];
+            const sameTypeChance = Math.random() < 0.5;
+            if (!sameTypeChance) {
+              const otherTypes = allTypes.filter(t => t !== drag.item.type);
+              resultType = otherTypes[Math.floor(Math.random() * otherTypes.length)];
+            }
+          }
+
           const configs = MERGE_ITEMS[newLevel];
-          const cfg = configs?.find(c => c.type === drag.item.type);
-          const reward = cfg?.mergeReward ?? 300;
+          const cfg = configs?.find(c => c.type === resultType);
+          const reward = cfg?.mergeReward ?? (newLevel === 4 ? 500 : newLevel === 3 ? 300 : 150);
+
+          const newItem = createItem(newLevel, resultType);
 
           const updates: { index: number; item: Item | null }[] = [
             { index: drag.sourceIndex, item: null },
-            { index: targetIndex, item: createItem(newLevel, drag.item.type) },
+            { index: targetIndex, item: newItem },
           ];
           setBoardItems(updates);
-          setMergeEffects(prev => [...prev, { col: pos.col, row: pos.row, coins: reward, key: `m_${Date.now()}` }]);
-          setTimeout(() => setMergeEffects(prev => prev.slice(1)), 1000);
+          setMergeEffects(prev => [...prev, {
+            col: pos.col, row: pos.row, coins: reward,
+            key: `m_${Date.now()}`, isFusion: isFusionMerge,
+            isLegendary: newLevel === 4,
+          }]);
+          setTimeout(() => setMergeEffects(prev => prev.slice(1)), 1200);
           addCoins(reward);
 
           if (newLevel === 4) {
             Sound.legendaryMerge();
+            onLegendaryMerge?.(newItem);
           } else {
             Sound.merge(newLevel);
           }
@@ -236,7 +264,7 @@ export function MergeBoard() {
           return (
             <div
               key={index}
-              className={`merge-cell ${isHighlight ? 'merge-cell-highlight' : ''}`}
+              className={`merge-cell ${isHighlight ? 'merge-cell-highlight' : ''} ${effect?.isLegendary ? 'legendary-flash' : ''}`}
               style={{ width: cellSize, height: cellSize }}
             >
               {item && !isDragSource && (
@@ -246,12 +274,17 @@ export function MergeBoard() {
                   style={{ width: cellSize, height: cellSize }}
                 >
                   <span className="item-emoji" style={{ fontSize: cellSize * 0.55 }}>{getItemConfig(item).emoji}</span>
-                  {item.level >= 3 && <span className="item-star">★</span>}
+                  {item.level === 3 && <span className="item-star">★</span>}
+                  {item.level >= 4 && <span className="item-star item-star-lg">★★★</span>}
                 </div>
               )}
               {effect && (
-                <div className="merge-coin-effect" key={effect.key}>
-                  +{effect.coins}
+                <div className={`merge-coin-effect ${effect.isLegendary ? 'legendary' : ''}`} key={effect.key}>
+                  {effect.isLegendary
+                    ? `★ +${effect.coins} ★`
+                    : effect.isFusion
+                      ? '⚡ 融合！'
+                      : `+${effect.coins}`}
                 </div>
               )}
             </div>

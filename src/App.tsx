@@ -9,7 +9,9 @@ import { MergeBoard } from './ui/components/MergeBoard';
 import { OrdersPanel } from './ui/components/OrdersPanel';
 import { StoryPanel } from './ui/components/StoryPanel';
 import { CutsceneModal } from './ui/components/CutsceneModal';
+import { LegendaryMergeModal } from './ui/components/LegendaryMergeModal';
 import { TabBar, Tab } from './ui/components/TabBar';
+import { Item } from './data/items';
 import { CHAPTERS } from './data/chapters';
 import { startEnergyTimer } from './stores/gameStore';
 
@@ -25,6 +27,7 @@ function getLayout(): Layout {
 function App() {
   const [showCutscene, setShowCutscene] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [legendaryItem, setLegendaryItem] = useState<Item | null>(null);
   const { t } = useTranslation();
   const { storyProgress, currentChapter } = useGameStore();
 
@@ -81,6 +84,7 @@ function App() {
         <MobileLayout
           mobileTab={mobileTab}
           onTabChange={setMobileTab}
+          onLegendaryMerge={setLegendaryItem}
         />
       )}
 
@@ -90,6 +94,7 @@ function App() {
           currentChapterData={currentChapterData}
           storyProgress={storyProgress}
           onContinue={() => setShowCutscene(true)}
+          onLegendaryMerge={setLegendaryItem}
         />
       )}
 
@@ -99,12 +104,21 @@ function App() {
           currentChapterData={currentChapterData}
           storyProgress={storyProgress}
           onContinue={() => setShowCutscene(true)}
+          onLegendaryMerge={setLegendaryItem}
         />
       )}
 
       {/* Cutscene modal */}
       {showCutscene && (
         <CutsceneModal onClose={() => setShowCutscene(false)} />
+      )}
+
+      {/* Legendary merge modal */}
+      {legendaryItem && (
+        <LegendaryMergeModal
+          item={legendaryItem}
+          onClose={() => setLegendaryItem(null)}
+        />
       )}
     </div>
   );
@@ -114,9 +128,11 @@ function App() {
 function MobileLayout({
   mobileTab,
   onTabChange,
+  onLegendaryMerge,
 }: {
   mobileTab: Tab;
   onTabChange: (t: Tab) => void;
+  onLegendaryMerge?: (item: Item) => void;
 }) {
   return (
     <>
@@ -126,7 +142,7 @@ function MobileLayout({
           padding: 8,
         }}
       >
-        {mobileTab === 'merge' && <MergeBoard />}
+        {mobileTab === 'merge' && <MergeBoard onLegendaryMerge={onLegendaryMerge} />}
         {mobileTab === 'orders' && (
           <div style={{ height: '100%', overflow: 'auto' }}>
             <OrdersPanel />
@@ -148,10 +164,12 @@ function TabletLayout({
   currentChapterData,
   storyProgress,
   onContinue,
+  onLegendaryMerge,
 }: {
   currentChapterData: { title?: string } | undefined;
   storyProgress: number;
   onContinue: () => void;
+  onLegendaryMerge?: (item: Item) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -167,7 +185,7 @@ function TabletLayout({
             padding: 16,
           }}
         >
-          <MergeBoard />
+          <MergeBoard onLegendaryMerge={onLegendaryMerge} />
         </div>
         {/* Right: Orders */}
         <div
@@ -224,10 +242,12 @@ function DesktopLayout({
   currentChapterData,
   storyProgress,
   onContinue,
+  onLegendaryMerge,
 }: {
   currentChapterData: { title?: string } | undefined;
   storyProgress: number;
   onContinue: () => void;
+  onLegendaryMerge?: (item: Item) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -255,7 +275,7 @@ function DesktopLayout({
             padding: 16,
           }}
         >
-          <MergeBoard />
+          <MergeBoard onLegendaryMerge={onLegendaryMerge} />
         </div>
         {/* Continue Story */}
         <div

@@ -90,10 +90,19 @@ export function getItemConfig(item: Item): MergeItemConfig {
 export function canMerge(a: Item | null | undefined, b: Item | null | undefined): boolean {
   if (!a || !b) return false;
   if (a.level >= 4 || b.level >= 4) return false;
-  return a.type === b.type && a.level === b.level;
+  // Same type + same level = standard merge (L1+L1, L2+L2, L3+L3)
+  if (a.type === b.type && a.level === b.level) return true;
+  // Cross-type fusion: any L3 + any L3 = L4
+  if (a.level === 3 && b.level === 3 && a.type !== b.type) return true;
+  return false;
 }
 
 // Overload for grid access (Item | null)
 export function canMergeItems(a: Item | null, b: Item | null): boolean {
   return canMerge(a, b);
+}
+
+// Check if a merge is a cross-type fusion (L3 + different L3)
+export function isFusion(a: Item, b: Item): boolean {
+  return a.level === 3 && b.level === 3 && a.type !== b.type;
 }
